@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
+import sklearn.metrics as sklm
 from sklearn.model_selection import train_test_split
 
-#a)
 def DesignMatrix(x, y, n):
     """Create design matrix"""
     N = len(x)
@@ -13,8 +13,7 @@ def DesignMatrix(x, y, n):
     for i in range(1, n+1):
         q = int(i*(i+1)/2.)
         for j in range(i+1):
-            M[:,q+j] = x**(i-j)*y**j
-            
+            M[:,q+j] = x**(i-j)*y**j    
     return M
 
 def FrankeFunction(x, y):
@@ -48,6 +47,24 @@ def OLS(X, y):
     y_tilde = X @ beta
     return beta, y_tilde
 
+def Ridge(X, y, lamb):
+    """Ridge regression"""
+    beta_OLS = OLS(X, y)
+    beta_ridge = beta_OLS*1./(1.+lamb)
+    return beta_ridge
+    
+def Lasso(alpha, X, z):
+    """Lasso regression"""
+    clf = skl.Lasso(alpha).fit(X, np.ravel(z))
+    beta = clf.coef_
+    return beta
+    
+
+def k_fold_CV(folds):
+    """k-fold cross-validation"""
+    return ...
+
+
 N = 10
 n = 5
 
@@ -55,22 +72,46 @@ x = np.sort(np.random.uniform(0, 1, N))
 y = np.sort(np.random.uniform(0, 1, N))
 
 X, Y = np.meshgrid(x, y)
-Z = FrankeFunction(X, Y)
+noise = np.random.normal(0, 1, size=X.shape)
+Z = FrankeFunction(X, Y) + noise
+z = np.ravel(Z)
 
 x_vec = np.ravel(X)
 y_vec = np.ravel(Y)
-m = int(len(x_vec))
-noise = np.random.random(m)
-
-z = np.ravel(Z) + noise
-
+#m = int(len(x_vec))
 M = DesignMatrix(x_vec, y_vec, n)
 
 X_train, X_test, Z_train, Z_test = TrainData(M, z, test=0.25)
-
 beta, ytilde = OLS(X_train, Z_train)
 
 mse = MSE(Z_train, ytilde)
 r2score = R2score(Z_train, ytilde)
 print(mse)
 print(r2score)
+
+"""
+plt.figure()
+plt.title("a)")
+plt.scatter(x, y)
+plt.plot(x, ytilde, color="red")
+plt.xlabel("X")
+plt.ylabel("Y")
+"""
+lineg = skl.LinearRegression().fit(M,y_vec)
+ypredict = lineg.predict(M)
+
+plt.figure()
+plt.title("b)")
+plt.scatter(x_vec, y_vec, color="black")
+#plt.plot(x, ytilde, color="blue", label="Custom", marker="o")
+plt.plot(x_vec, ypredict, color="red", label="Sklearn")
+plt.xlabel("X")
+plt.ylabel("Y")
+
+
+"""
+test_mse = sklm.mean_squared_error(Z_train, ytilde)
+test_r2 = sklm.r2_score(Z_train, ytilde)
+print(test_mse)
+print(test_r2)
+"""
