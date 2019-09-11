@@ -1,3 +1,4 @@
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
@@ -25,14 +26,20 @@ def FrankeFunction(x, y):
 
 def MSE(y_data, y_model):
     """Mean Squared Error function"""
+    y_data = np.ravel(y_data)
+    y_model = np.ravel(y_model)
     return np.mean((y_data-y_model)**2)
 
 def R2score(y_data, y_model):
     """R^2 score function"""
+    y_data = np.ravel(y_data)
+    y_model = np.ravel(y_model)
     return 1 - np.sum((y_data-y_model)**2)/np.sum((y_data-np.mean(y_data))**2)
 
 def RelativeError(y_data, y_model):
     """Relative error"""
+    y_data = np.ravel(y_data)
+    y_model = np.ravel(y_model)
     return abs((y_data-y_model)/y_data)
 
 def TrainData(M, a, test=0.25):
@@ -44,8 +51,7 @@ def OLS(X, y):
     """Ordinary least squared"""
     beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
     #print(beta)
-    y_tilde = X @ beta
-    return beta, y_tilde
+    return beta
 
 def Ridge(X, y, lamb):
     """Ridge regression"""
@@ -82,21 +88,39 @@ y_vec = np.ravel(Y)
 M = DesignMatrix(x_vec, y_vec, n)
 
 X_train, X_test, Z_train, Z_test = TrainData(M, z, test=0.25)
-beta, ytilde = OLS(X_train, Z_train)
+beta_OLS = OLS(X_train, Z_train)
+y_tilde = M @ beta_OLS
 
-mse = MSE(Z_train, ytilde)
-r2score = R2score(Z_train, ytilde)
-print(mse)
-print(r2score)
+#mse = MSE(Z_train, y_tilde)
+#r2score = R2score(Z_train, y_tilde)
+#print(mse)
+#print(r2score)
+
+
+
+
+
+
+
 
 """
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
 plt.figure()
 plt.title("a)")
 plt.scatter(x, y)
 plt.plot(x, ytilde, color="red")
 plt.xlabel("X")
 plt.ylabel("Y")
-"""
+
+fig = plt.figure()
+ax = fig.gca(projection="3d")
+surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+ax.zaxis.set_major_locator(LinearLocator(10))
+ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+fig.colorbar(surf, shrink=0.5, aspect=5)
+
 lineg = skl.LinearRegression().fit(M,y_vec)
 ypredict = lineg.predict(M)
 
@@ -109,7 +133,7 @@ plt.xlabel("X")
 plt.ylabel("Y")
 
 
-"""
+
 test_mse = sklm.mean_squared_error(Z_train, ytilde)
 test_r2 = sklm.r2_score(Z_train, ytilde)
 print(test_mse)
