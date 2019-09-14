@@ -42,14 +42,28 @@ def RelativeError(y_data, y_model):
     y_model = np.ravel(y_model)
     return abs((y_data-y_model)/y_data)
 
+def Var(ytilde):
+    """Variance"""
+    y_tilde = np.ravel(ytilde)
+    return np.mean((y_tilde - np.mean(y_tilde))**2)
+
+def Bias(ytilde, y):
+    """Bias"""
+    y = np.ravel(y)
+    y_tilde = np.ravel(ytilde)
+    return np.mean((y - np.mean(y_tilde))**2)
+
 def TrainData(M, a, test=0.25):
     """Split data in training data and test data"""
     X_train, X_test, Z_train, z_test = train_test_split(M, z, test_size=test)
     return X_train, X_test, Z_train, z_test
 
 def OLS(X, y):
-    """Ordinary least squared"""
-    beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    """Ordinary least squared using singular value decomposition (SVD)"""
+    U, s, VT = np.linalg.svd(X)
+    D = np.diags(s**2)
+    Xinv = np.linalg.inv(VT.T @ D @ VT)
+    beta = Xinv @ X.T @ y
     #print(beta)
     return beta
 
