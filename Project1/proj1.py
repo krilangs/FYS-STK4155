@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
 import sklearn.metrics as sklm
 from sklearn.model_selection import train_test_split
+np.random.seed(1337)
 
 def DesignMatrix(x, y, n):
     """Create design matrix"""
@@ -14,10 +15,11 @@ def DesignMatrix(x, y, n):
     for i in range(1, n+1):
         q = int(i*(i+1)/2.)
         for j in range(i+1):
-            M[:,q+j] = x**(i-j)*y**j    
+            M[:, q+j] = x**(i-j)*y**j    
     return M
 
 def FrankeFunction(x, y):
+    """Franke function"""
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
     term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
     term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
@@ -61,10 +63,9 @@ def TrainData(M, a, test=0.25):
 def OLS(X, y):
     """Ordinary least squared using singular value decomposition (SVD)"""
     U, s, VT = np.linalg.svd(X)
-    D = np.diags(s**2)
+    D = np.diag(s**2)
     Xinv = np.linalg.inv(VT.T @ D @ VT)
     beta = Xinv @ X.T @ y
-    #print(beta)
     return beta
 
 def Ridge(X, y, lamb):
@@ -78,11 +79,54 @@ def Lasso(alpha, X, z):
     clf = skl.Lasso(alpha).fit(X, np.ravel(z))
     beta = clf.coef_
     return beta
-    
 
-def k_fold_CV(folds):
+def sigma_sqr(X, z, ztilde):
+    """Sigma squared (variance?)"""
+    z = np.ravel(z)
+    z_tilde = np.ravel(ztilde)
+    return 1./(len(z) - len(X[0]) - 1)*np.sum((z_tilde - z)**2)
+    
+def beta_var(X, z, ztilde):
+    """Beta-variance"""
+    U, s, VT = np.linalg.svd(X)
+    D = np.diag(s**2)
+    sigma = np.zeros(X.shape)
+    sigma[:len(s), :len(s)] = np.linalg.inv(D)
+    var = sigma_sqr(X, z, ztilde)*VT @ sigma.T @ sigma @ VT.T
+    return np.linalg.inv(var)
+
+def confidence_int(X, z_tilde, beta):
+    """Confidence interval of beta"""
+    varbeta = np.sqrt(np.linalg.inv(X.T @ X)).diagonal()
+    percent = [99, 98, 95, 90]
+    Z = [2.576, 2.326, 1.96, 1.645]
+    sigmaSQ = np.sum((z - z_tilde)**2)/(len(z) - len(beta) - 1)
+    for k in range(len(beta)):
+        print("Confidence interval for beta %i" % (k + 1))
+        for i, n in enumerate(percent):
+            print("%2i%%: %3.2f +- %3.2f" % (percent[i], beta[k], Z[i]*np.sqrt(sigmaSQ)*varbeta[k]))
+
+def k_fold_CV(X, y, folds, shuffle = False):
     """k-fold cross-validation"""
-    return ...
+    if shuffle == True:
+        interval = np.random.choice(len(y), replace = False, size =int(len(y)))
+        isplit = np.sort(np.array_split(interval, folds))
+    else:
+        interval = np.arange(len(y))
+        isplit = np.array_split(interval, folds)
+    kR2 = 0
+    kMSE = 0
+    for i in range(folds):
+        X_train, y_train = np.ma.array(X, mask = False), np.ma.array(y, mask = False)
+        y_train.mask[isplit[i]] = True
+        X_train.mask[isplit[i],:] = True
+        X_train = np.ma.compress_rows(X_train)
+        y_train = y_train.compressed()
+        beta = np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train)
+        y_tilde = X_train @ beta
+        kR2 += R2score(y_train, y_tilde)
+        kMSE += MSE(y_train, y_tilde)
+    return kR2/folds, kMSE/folds
 
 
 N = 10
@@ -103,12 +147,12 @@ M = DesignMatrix(x_vec, y_vec, n)
 
 X_train, X_test, Z_train, Z_test = TrainData(M, z, test=0.25)
 beta_OLS = OLS(X_train, Z_train)
-y_tilde = M @ beta_OLS
+y_tilde = X_train @ beta_OLS
 
-#mse = MSE(Z_train, y_tilde)
-#r2score = R2score(Z_train, y_tilde)
-#print(mse)
-#print(r2score)
+mse = MSE(Z_train, y_tilde)
+r2score = R2score(Z_train, y_tilde)
+print(mse)
+print(r2score)
 
 
 
