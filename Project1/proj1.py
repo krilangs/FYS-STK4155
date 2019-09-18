@@ -1,6 +1,8 @@
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import numpy as np
 import sklearn.linear_model as skl
 import sklearn.metrics as sklm
 from sklearn.model_selection import train_test_split
@@ -8,6 +10,8 @@ np.random.seed(1337)
 
 def DesignMatrix(x, y, n):
     """Create design matrix"""
+    x = np.ravel(x)
+    y = np.ravel(y)
     N = len(x)
     num = int((n+1)*(n+2)/2.)
     M = np.ones((N, num))
@@ -57,6 +61,7 @@ def Bias(ytilde, y):
 
 def TrainData(M, a, test=0.25):
     """Split data in training data and test data"""
+    z = np.ravel(a)
     X_train, X_test, Z_train, z_test = train_test_split(M, z, test_size=test)
     return X_train, X_test, Z_train, z_test
 
@@ -74,7 +79,7 @@ def Ridge(X, y, lamb):
     beta_ridge = beta_OLS*1./(1.+lamb)
     return beta_ridge
     
-def Lasso(alpha, X, z):
+def Lasso(X, z, alpha):
     """Lasso regression"""
     clf = skl.Lasso(alpha).fit(X, np.ravel(z))
     beta = clf.coef_
@@ -95,7 +100,7 @@ def beta_var(X, z, ztilde):
     var = sigma_sqr(X, z, ztilde)*VT @ sigma.T @ sigma @ VT.T
     return np.linalg.inv(var)
 
-def confidence_int(X, z_tilde, beta):
+def confidence_int(X, z, z_tilde, beta):
     """Confidence interval of beta"""
     varbeta = np.sqrt(np.linalg.inv(X.T @ X)).diagonal()
     percent = [99, 98, 95, 90]
@@ -126,10 +131,10 @@ def k_fold_CV(X, y, folds, shuffle = False):
         y_tilde = X_train @ beta
         kR2 += R2score(y_train, y_tilde)
         kMSE += MSE(y_train, y_tilde)
-    return kR2/folds, kMSE/folds
+    return beta, kR2/folds, kMSE/folds
 
 
-N = 10
+N = 20
 n = 5
 
 x = np.sort(np.random.uniform(0, 1, N))
@@ -137,30 +142,156 @@ y = np.sort(np.random.uniform(0, 1, N))
 
 X, Y = np.meshgrid(x, y)
 noise = np.random.normal(0, 1, size=X.shape)
-Z = FrankeFunction(X, Y) + noise
+Z = FrankeFunction(X, Y)# + noise
 z = np.ravel(Z)
 
-x_vec = np.ravel(X)
-y_vec = np.ravel(Y)
-#m = int(len(x_vec))
-M = DesignMatrix(x_vec, y_vec, n)
-
-X_train, X_test, Z_train, Z_test = TrainData(M, z, test=0.25)
+M = DesignMatrix(X, Y, n)
+#print(M)
+print(M.size, M.shape)
+#print(Z.size, Z.shape)
+#print(X.size, X.shape)
+X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
 beta_OLS = OLS(X_train, Z_train)
 y_tilde = X_train @ beta_OLS
+#print(X_train.size, X_train.shape)
+#print(beta_OLS.size, beta_OLS.shape)
+#print(y_tilde.size, y_tilde.shape)
+#print(Z.size, Z.shape)
+#print(z.size, z.shape)
+beta = OLS(X_train, Z_train)
+y_tilde = M @ beta
+#print(beta)
+#mse = MSE(Z_test, y_tilde)
+#r2score = R2score(Z_test, y_tilde)
+#print(mse)
+#print(r2score)
+"""Before train_test: (with or without noise)"""
+print("Before train_test:")
+beta_OLS = OLS(M, z)
+#print(beta_OLS.size, beta_OLS.shape)
+y_tilde = M @ beta_OLS
+#print(y_tilde)
 
-mse = MSE(Z_train, y_tilde)
-r2score = R2score(Z_train, y_tilde)
-print(mse)
-print(r2score)
+mse = MSE(Z, y_tilde)
+print("MSE =", mse)
+r2score = R2score(Z, y_tilde)
+print("R2-score = ", r2score)
+var = Var(y_tilde)
+print("Variance = ", var)
+print(len(beta_OLS))
+conf_int = confidence_int(M, z, y_tilde, beta_OLS)
+print(conf_int)
 
+def fig_bias_var(x, y, p=10, n=20):
+    error_MSE = np.zeros((4, p+1))
+    error_R2 = np.zeros((4, p+1))
+    
+    error_MSE_train = np.zeros((4, p+1))
+    error_R2_train = np.zeros((4, p+1))
+    
+    complexity = np.arange(0, p+1, 1)
+    
+    for i in range(n):
+        Z = FrankeFunction(x, y) + np.random.normal(0, 1, size=x.shape)
+        print(i)
+        for j in range(p+1):
+            X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
+            # Test data
+            beta_OLS = OLS(X_train, Z_train)
+            beta_Ridge = Ridge(X_train, Z_train, lamb=0.1)
+            beta_k, _, _ = k_fold_CV(X_train, Z_train, 5, shuffle = False)
+            beta_Lasso = Lasso(X_train, Z_train, alpha=0.000001)
+            
+            z_tilde_OLS = X_test @ beta_OLS
+            z_tilde_Ridge = X_test @ beta_Ridge
+            z_tilde_k = X_test @ beta_k
+            z_tilde_Lasso = X_test @ beta_Lasso
+            
+            error_MSE[0, j] += MSE(Z_test, z_tilde_OLS)
+            error_MSE[1, j] += MSE(Z_test, z_tilde_k)
+            error_MSE[2, j] += MSE(Z_test, z_tilde_Ridge)
+            error_MSE[3, j] += MSE(Z_test, z_tilde_Lasso)
+            error_R2[0, j] += R2score(Z_test, z_tilde_OLS)
+            error_R2[1, j] += R2score(Z_test, z_tilde_k)
+            error_R2[2, j] += R2score(Z_test, z_tilde_Ridge)
+            error_R2[3, j] += R2score(Z_test, z_tilde_Lasso)
+            # Training data
+            z_tilde_OLS = X_train @ beta_OLS
+            z_tilde_k = X_train @ beta_k
+            z_tilde_Ridge = X_train @ beta_Ridge
+            z_tilde_Lasso = X_train @ beta_Lasso
+            
+            error_MSE_train[0, j] += MSE(Z_train, z_tilde_OLS)
+            error_MSE_train[1, j] += MSE(Z_train, z_tilde_k)
+            error_MSE_train[2, j] += MSE(Z_train, z_tilde_Ridge)
+            error_MSE_train[3, j] += MSE(Z_train, z_tilde_Lasso)
+            error_R2_train[0, j] += R2score(Z_train, z_tilde_OLS)
+            error_R2_train[1, j] += R2score(Z_train, z_tilde_k)
+            error_R2_train[2, j] += R2score(Z_train, z_tilde_Ridge)
+            error_R2_train[3, j] += R2score(Z_train, z_tilde_Lasso)
 
+    error_MSE /= n
+    error_R2 /= n
+    error_MSE_train /= n
+    error_R2_train /= n
 
+    plt.title('OLS')
+    plt.plot(complexity, error_MSE[0], label = 'Test')
+    plt.plot(complexity, error_MSE_train[0], label = 'Training')
+    plt.ylim([0, np.max(error_MSE[0]*1.2)])
+    plt.legend()
 
+    plt.title('k-fold')
+    plt.plot(complexity, error_MSE[1], label = 'Test')
+    plt.plot(complexity, error_MSE_train[1], label = 'Training')
+    plt.ylim([0, np.max(error_MSE[1]*1.2)])
 
+    plt.title('Ridge')
+    plt.plot(complexity, error_MSE[2], label = 'Test')
+    plt.plot(complexity, error_MSE_train[2], label = 'Training')
+    plt.ylim([0, np.max(error_MSE[2]*1.2)])
+    plt.legend()
 
+    plt.title('Lasso')
+    plt.plot(complexity, error_MSE[3], label = 'Test')
+    plt.plot(complexity, error_MSE_train[3], label = 'Training')
+    plt.ylim([0, np.max(error_MSE[3]*1.2)])
+    plt.legend()
+    plt.show()
 
+def plot3d(x, y, z1, z2):
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+    #ax = fig.add_subplot(121, projection = '3d')
+    # Plot the surface.
+    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    # Customize the z axis.
+    #ax.set_zlim(-0.10, 1.40)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+    # Add a color bar which maps values to colors
+    fig.colorbar(surf, shrink=0.5, aspect=5)
 
+    fig = plt.figure()
+    #ax = fig.add_subplot(122, projection = '3d')
+    ax = fig.gca(projection="3d")
+    # Plot the surface.
+    ax.plot_surface(x, y, z2, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    #ax.set_zlim(-0.10, 1.40)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+    # Customize the z axis.
+    #ax.set_zlim(-0.10, 1.40)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+    plt.show()
+
+#if __name__ == "__main__":
+    #plot3d(X, Y, np.reshape(y_tilde, Z.shape), Z)
+    #fig_bias_var(X, Y, p=10, n=20)
+    
 """
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
