@@ -150,20 +150,7 @@ y_tilde = M @ beta
 #r2score = R2score(Z_test, y_tilde)
 #print(mse)
 #print(r2score)
-"""Before train_test: (without noise)"""
-print("Before train_test:")
-Z = FrankeFunction(X, Y)
-z = np.ravel(Z)
-beta_OLS = OLS(M, z)
-y_tilde = M @ beta_OLS
-mse = MSE(Z, y_tilde)
-print("MSE =", mse)
-r2score = R2score(Z, y_tilde)
-print("R2-score = ", r2score)
-var = Var(y_tilde)
-print("Variance = ", var)
-#print(len(beta_OLS))
-#conf_int = confidence_int(M, z, y_tilde, beta_OLS)
+
 #plot3d(X, Y, np.reshape(y_tilde, Z.shape), Z)
 
 def fig_bias_var(x, y, p=10, n=20):
@@ -243,7 +230,7 @@ def fig_bias_var(x, y, p=10, n=20):
     plt.legend()
     plt.show()
 
-def plot3d(x, y, z1, z2):
+def plot3d(x, y, z, z2):
     fig = plt.figure()
     ax = fig.gca(projection="3d")
     #ax = fig.add_subplot(121, projection = '3d')
@@ -273,30 +260,40 @@ def plot3d(x, y, z1, z2):
     plt.show()
 
 if __name__ == "__main__":
-    plot3d(X, Y, z1=np.reshape(y_tilde, Z.shape), z2=Z)
+    """Before train_test: (without noise)"""
+    print("Before train_test:")
+    Z = FrankeFunction(X, Y)
+    z = np.ravel(Z)
+    beta_OLS = OLS(M, z)
+    y_tilde = M @ beta_OLS
+    mse = MSE(Z, y_tilde)
+    r2score = R2score(Z, y_tilde)
+    var = Var(y_tilde)
+    print("MSE =", mse)
+    print("R2-score = ", r2score)
+    print("Variance = ", var)
+    #conf_int = confidence_int(M, z, y_tilde, beta_OLS)
+    #plot3d(X, Y, z=np.reshape(y_tilde, Z.shape), z2=Z)
+    
     #fig_bias_var(X, Y, p=10, n=20)
     
 """
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-
 plt.figure()
 plt.title("a)")
 plt.scatter(x, y)
 plt.plot(x, ytilde, color="red")
 plt.xlabel("X")
 plt.ylabel("Y")
-
 fig = plt.figure()
 ax = fig.gca(projection="3d")
 surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 ax.zaxis.set_major_locator(LinearLocator(10))
 ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
 fig.colorbar(surf, shrink=0.5, aspect=5)
-
 lineg = skl.LinearRegression().fit(M,y_vec)
 ypredict = lineg.predict(M)
-
 plt.figure()
 plt.title("b)")
 plt.scatter(x_vec, y_vec, color="black")
@@ -304,9 +301,6 @@ plt.scatter(x_vec, y_vec, color="black")
 plt.plot(x_vec, ypredict, color="red", label="Sklearn")
 plt.xlabel("X")
 plt.ylabel("Y")
-
-
-
 test_mse = sklm.mean_squared_error(Z_train, ytilde)
 test_r2 = sklm.r2_score(Z_train, ytilde)
 print(test_mse)
