@@ -1,11 +1,8 @@
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
 import sklearn.linear_model as skl
 import sklearn.metrics as sklm
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
+from plots import plot3d
 np.random.seed(1337)
 
 def DesignMatrix(x, y, n):
@@ -96,28 +93,49 @@ def confidence_int(X, z, z_tilde, beta):
         for i, n in enumerate(percent):
             print("%2i%%: %3.2f +- %3.2f" % (percent[i], beta[k], Z[i]*np.sqrt(sigmaSQ)*varbeta[k]))
 
-def k_fold_CV(X, y, folds, shuffle = False):
+def k_fold_CV(X, y, folds):
     """k-fold cross-validation"""
-    if shuffle == True:
-        interval = np.random.choice(len(y), replace = False, size =int(len(y)))
-        isplit = np.sort(np.array_split(interval, folds))
-    else:
-        interval = np.arange(len(y))
-        isplit = np.array_split(interval, folds)
-    kR2 = 0
-    kMSE = 0
+    X_train, X_test, Z_train, Z_test = TrainData(X, y, test=0.25)
+    x_train = np.split(X_train, folds)
+    z_train = np.split(Z_train, folds)
+    x_test = np.split(X_test, folds)
+    z_test = np.split(Z_test, folds) 
+    
+    MSE_train = []
+    MSE_test =[]
+    R2_train = []
+    R2_test = []
     for i in range(folds):
-        X_train, y_train = np.ma.array(X, mask = False), np.ma.array(y, mask = False)
-        y_train.mask[isplit[i]] = True
-        X_train.mask[isplit[i],:] = True
-        X_train = np.ma.compress_rows(X_train)
-        y_train = y_train.compressed()
-        beta = np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train)
-        y_tilde = X_train @ beta
-        kR2 += R2score(y_train, y_tilde)
-        kMSE += MSE(y_train, y_tilde)
-    return beta, kR2/folds, kMSE/folds
+        X_train = x_train
+        X_train = np.delete(X_train, i, 0)
+        X_train = np.concatenate(X_train)
+        X_test = x_test
+        X_test = np.delete(X_test, i, 0)
+        X_test = np.concatenate(X_test)
 
+        Z_train = z_train
+        Z_train = np.delete(Z_train, i, 0)
+        Z_train = np.ravel(Z_train)
+        Z_test = z_test
+        Z_test = np.delete(Z_test, i, 0)
+        Z_test = np.ravel(Z_test)
+
+        beta_train = OLS(X_train, Z_train)
+        y_tilde_train = X_train @ beta_train
+        beta_test = OLS(X_test, Z_test)
+        y_tilde_test = X_test @ beta_test
+
+        MSE_train_i = MSE(Z_train, y_tilde_train)
+        R2_train_i = R2score(Z_train, y_tilde_train)
+        MSE_test_i = MSE(Z_test, y_tilde_test)
+        R2_test_i = R2score(Z_test, y_tilde_test)
+
+        MSE_train = np.append(MSE_train, MSE_train_i)
+        R2_train = np.append(R2_train, R2_train_i)
+        MSE_test = np.append(MSE_test, MSE_test_i)
+        R2_test = np.append(R2_test, R2_test_i)
+
+    return np.mean(MSE_train), np.mean(R2_train), np.mean(MSE_test), np.mean(R2_test)
 
 N = 20
 n = 5
@@ -126,7 +144,7 @@ x = np.sort(np.random.uniform(0, 1, N))
 y = np.sort(np.random.uniform(0, 1, N))
 
 X, Y = np.meshgrid(x, y)
-noise = np.random.normal(0, 1, size=X.shape)
+noise = 0.8*np.random.normal(0, 1, size=X.shape)
 Z = FrankeFunction(X, Y) + noise
 z = np.ravel(Z)
 
@@ -135,7 +153,7 @@ M = DesignMatrix(X, Y, n)
 #print(M.size, M.shape)
 #print(Z.size, Z.shape)
 #print(X.size, X.shape)
-X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
+"""
 beta_OLS = OLS(X_train, Z_train)
 y_tilde = X_train @ beta_OLS
 #print(X_train.size, X_train.shape)
@@ -150,8 +168,7 @@ y_tilde = M @ beta
 #r2score = R2score(Z_test, y_tilde)
 #print(mse)
 #print(r2score)
-
-#plot3d(X, Y, np.reshape(y_tilde, Z.shape), Z)
+"""
 
 def fig_bias_var(x, y, p=10, n=20):
     error_MSE = np.zeros((4, p+1))
@@ -230,37 +247,9 @@ def fig_bias_var(x, y, p=10, n=20):
     plt.legend()
     plt.show()
 
-def plot3d(x, y, z, z2):
-    fig = plt.figure()
-    ax = fig.gca(projection="3d")
-    #ax = fig.add_subplot(121, projection = '3d')
-    # Plot the surface.
-    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    # Customize the z axis.
-    #ax.set_zlim(-0.10, 1.40)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-    # Add a color bar which maps values to colors
-    fig.colorbar(surf, shrink=0.5, aspect=5)
-
-    fig = plt.figure()
-    #ax = fig.add_subplot(122, projection = '3d')
-    ax = fig.gca(projection="3d")
-    # Plot the surface.
-    ax.plot_surface(x, y, z2, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    #ax.set_zlim(-0.10, 1.40)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-    # Customize the z axis.
-    #ax.set_zlim(-0.10, 1.40)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-    # Add a color bar which maps values to colors.
-    fig.colorbar(surf, shrink=0.5, aspect=5)
-    plt.show()
 
 if __name__ == "__main__":
-    """Before train_test: (without noise)"""
+    """OLS on Franke function"""
     print("Before train_test:")
     Z = FrankeFunction(X, Y)
     z = np.ravel(Z)
@@ -270,11 +259,19 @@ if __name__ == "__main__":
     r2score = R2score(Z, y_tilde)
     var = Var(y_tilde)
     print("MSE =", mse)
-    print("R2-score = ", r2score)
-    print("Variance = ", var)
+    print("R2-score =", r2score)
+    print("Variance =", var)
     #conf_int = confidence_int(M, z, y_tilde, beta_OLS)
     #plot3d(X, Y, z=np.reshape(y_tilde, Z.shape), z2=Z)
-    
+    """Resampling"""
+    print("Resampling of test data with k_fold:")
+    Z = FrankeFunction(X, Y) + noise
+    MSE_train, R2_train, MSE_test, R2_test = k_fold_CV(M, Z, folds=5)
+    print("MSE train set =", MSE_train)
+    print("R2-score train set =", R2_train)
+    print("MSE test set =", MSE_test)
+    print("R2-score test set =", R2_test)
+    """Bias-variance tradeoff"""
     #fig_bias_var(X, Y, p=10, n=20)
     
 """
