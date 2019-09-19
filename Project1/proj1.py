@@ -85,21 +85,6 @@ def Lasso(X, z, alpha):
     beta = clf.coef_
     return beta
 
-def sigma_sqr(X, z, ztilde):
-    """Sigma squared (variance?)"""
-    z = np.ravel(z)
-    z_tilde = np.ravel(ztilde)
-    return 1./(len(z) - len(X[0]) - 1)*np.sum((z_tilde - z)**2)
-    
-def beta_var(X, z, ztilde):
-    """Beta-variance"""
-    U, s, VT = np.linalg.svd(X)
-    D = np.diag(s**2)
-    sigma = np.zeros(X.shape)
-    sigma[:len(s), :len(s)] = np.linalg.inv(D)
-    var = sigma_sqr(X, z, ztilde)*VT @ sigma.T @ sigma @ VT.T
-    return np.linalg.inv(var)
-
 def confidence_int(X, z, z_tilde, beta):
     """Confidence interval of beta"""
     varbeta = np.sqrt(np.linalg.inv(X.T @ X)).diagonal()
@@ -142,12 +127,12 @@ y = np.sort(np.random.uniform(0, 1, N))
 
 X, Y = np.meshgrid(x, y)
 noise = np.random.normal(0, 1, size=X.shape)
-Z = FrankeFunction(X, Y)# + noise
+Z = FrankeFunction(X, Y) + noise
 z = np.ravel(Z)
 
 M = DesignMatrix(X, Y, n)
 #print(M)
-print(M.size, M.shape)
+#print(M.size, M.shape)
 #print(Z.size, Z.shape)
 #print(X.size, X.shape)
 X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
@@ -165,22 +150,21 @@ y_tilde = M @ beta
 #r2score = R2score(Z_test, y_tilde)
 #print(mse)
 #print(r2score)
-"""Before train_test: (with or without noise)"""
+"""Before train_test: (without noise)"""
 print("Before train_test:")
+Z = FrankeFunction(X, Y)
+z = np.ravel(Z)
 beta_OLS = OLS(M, z)
-#print(beta_OLS.size, beta_OLS.shape)
 y_tilde = M @ beta_OLS
-#print(y_tilde)
-
 mse = MSE(Z, y_tilde)
 print("MSE =", mse)
 r2score = R2score(Z, y_tilde)
 print("R2-score = ", r2score)
 var = Var(y_tilde)
 print("Variance = ", var)
-print(len(beta_OLS))
-conf_int = confidence_int(M, z, y_tilde, beta_OLS)
-print(conf_int)
+#print(len(beta_OLS))
+#conf_int = confidence_int(M, z, y_tilde, beta_OLS)
+#plot3d(X, Y, np.reshape(y_tilde, Z.shape), Z)
 
 def fig_bias_var(x, y, p=10, n=20):
     error_MSE = np.zeros((4, p+1))
@@ -192,7 +176,7 @@ def fig_bias_var(x, y, p=10, n=20):
     complexity = np.arange(0, p+1, 1)
     
     for i in range(n):
-        Z = FrankeFunction(x, y) + np.random.normal(0, 1, size=x.shape)
+        Z = FrankeFunction(x, y) #+ np.random.normal(0, 1, size=x.shape)
         print(i)
         for j in range(p+1):
             X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
@@ -288,8 +272,8 @@ def plot3d(x, y, z1, z2):
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show()
 
-#if __name__ == "__main__":
-    #plot3d(X, Y, np.reshape(y_tilde, Z.shape), Z)
+if __name__ == "__main__":
+    plot3d(X, Y, z1=np.reshape(y_tilde, Z.shape), z2=Z)
     #fig_bias_var(X, Y, p=10, n=20)
     
 """
@@ -328,3 +312,18 @@ test_r2 = sklm.r2_score(Z_train, ytilde)
 print(test_mse)
 print(test_r2)
 """
+
+def sigma_sqr(X, z, ztilde):
+    """Sigma squared (variance?)"""
+    z = np.ravel(z)
+    z_tilde = np.ravel(ztilde)
+    return 1./(len(z) - len(X[0]) - 1)*np.sum((z_tilde - z)**2)
+    
+def beta_var(X, z, ztilde):
+    """Beta-variance"""
+    U, s, VT = np.linalg.svd(X)
+    D = np.diag(s**2)
+    sigma = np.zeros(X.shape)
+    sigma[:len(s), :len(s)] = np.linalg.inv(D)
+    var = sigma_sqr(X, z, ztilde)*VT @ sigma.T @ sigma @ VT.T
+    return np.linalg.inv(var)
