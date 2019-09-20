@@ -29,58 +29,58 @@ def FrankeFunction(x, y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
-def MSE(y_data, y_model):
+def MSE(data, model):
     """Mean Squared Error function"""
-    y_data = np.ravel(y_data)
-    y_model = np.ravel(y_model)
+    y_data = np.ravel(data)
+    y_model = np.ravel(model)
     return np.mean((y_data-y_model)**2)
 
-def R2score(y_data, y_model):
+def R2score(data, model):
     """R^2 score function"""
-    y_data = np.ravel(y_data)
-    y_model = np.ravel(y_model)
+    y_data = np.ravel(data)
+    y_model = np.ravel(model)
     return 1 - np.sum((y_data-y_model)**2)/np.sum((y_data-np.mean(y_data))**2)
 
-def RelativeError(y_data, y_model):
-    """Relative error"""
-    y_data = np.ravel(y_data)
-    y_model = np.ravel(y_model)
-    return abs((y_data-y_model)/y_data)
+#def RelativeError(data, model):
+#    """Relative error"""
+#    y_data = np.ravel(data)
+#    y_model = np.ravel(model)
+#    return abs((y_data-y_model)/y_data)
 
-def Var(ytilde):
+def Var(model):
     """Variance"""
-    y_tilde = np.ravel(ytilde)
+    y_tilde = np.ravel(model)
     return np.mean((y_tilde - np.mean(y_tilde))**2)
 
-def Bias(ytilde, y):
+def Bias(data, model):
     """Bias"""
-    y = np.ravel(y)
-    y_tilde = np.ravel(ytilde)
+    y = np.ravel(model)
+    y_tilde = np.ravel(data)
     return np.mean((y - np.mean(y_tilde))**2)
 
-def TrainData(M, a, test=0.25):
+def TrainData(M, v, test=0.25):
     """Split data in training data and test data"""
-    z = np.ravel(a)
+    z = np.ravel(v)
     X_train, X_test, Z_train, z_test = train_test_split(M, z, test_size=test)
     return X_train, X_test, Z_train, z_test
 
-def OLS(X, y):
+def OLS(X, data):
     """Ordinary least squared using singular value decomposition (SVD)"""
     U, s, VT = np.linalg.svd(X)
     D = np.diag(s**2)
     Xinv = np.linalg.inv(VT.T @ D @ VT)
-    beta = Xinv @ X.T @ y
+    beta = Xinv @ X.T @ data
     return beta
 
-def Ridge(X, y, lamb):
+def Ridge(X, data, lamb):
     """Ridge regression"""
-    beta_OLS = OLS(X, y)
+    beta_OLS = OLS(X, data)
     beta_ridge = beta_OLS*1./(1.+lamb)
     return beta_ridge
     
-def Lasso(X, z, alpha):
+def Lasso(X, data, alpha):
     """Lasso regression"""
-    clf = skl.Lasso(alpha).fit(X, np.ravel(z))
+    clf = skl.Lasso(alpha).fit(X, np.ravel(data))
     beta = clf.coef_
     return beta
 
@@ -139,24 +139,6 @@ def k_fold_CV(X, y, folds):
 
     return np.mean(MSE_train), np.mean(R2_train), np.mean(MSE_test), np.mean(R2_test)
 
-
-"""
-beta_OLS = OLS(X_train, Z_train)
-y_tilde = X_train @ beta_OLS
-#print(X_train.size, X_train.shape)
-#print(beta_OLS.size, beta_OLS.shape)
-#print(y_tilde.size, y_tilde.shape)
-#print(Z.size, Z.shape)
-#print(z.size, z.shape)
-beta = OLS(X_train, Z_train)
-y_tilde = M @ beta
-#print(beta)
-#mse = MSE(Z_test, y_tilde)
-#r2score = R2score(Z_test, y_tilde)
-#print(mse)
-#print(r2score)
-"""
-
 def fig_bias_var(x, y, p=10, n=20):
     """
     Function to plot the test and training errors as
@@ -172,10 +154,13 @@ def fig_bias_var(x, y, p=10, n=20):
     error_var_train = np.zeros_like(error_MSE)
     error_bias_train = np.zeros_like(error_MSE)
     
+    total_train = np.zeros(p+1)
+    total_test = np.zeros(p+1)
+    
     complexity = np.arange(0, p+1, 1)
     
     for i in range(n):
-        Z = FrankeFunction(x, y) + 0.6*np.random.normal(0, 1, size=x.shape)
+        Z = FrankeFunction(x, y)# + 0.6*np.random.normal(0, 1, size=x.shape)
         print(i)
         for j in range(p+1):
             X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
@@ -217,6 +202,9 @@ def fig_bias_var(x, y, p=10, n=20):
             #error_R2_train[3, j] += R2score(Z_train, z_tilde_Lasso)
             error_var_train[0, j] += Var(z_tilde_OLS)
             error_bias_train[0, j] += Bias(z_tilde_OLS, Z_test)
+            
+            total_test[j] = error_bias_train[0, j] + error_var_train[0, j] - error_MSE_train[0, j]
+            total_test[j] = error_bias[0, j] + error_var[0, j] - error_MSE[0, j]
             #print("Bias + Var - MSE=", error_bias[0, j] + error_var[0, j] - error_MSE[0, j])
     error_MSE /= n
     error_R2 /= n
@@ -241,6 +229,10 @@ def fig_bias_var(x, y, p=10, n=20):
     plt.plot(complexity, error_bias_train[0], label = 'Bias:Training')
     #plt.ylim([0, np.max(error_MSE[0]*1.2)])
     plt.legend()
+    
+    plt.figure()
+    plt.plot(complexity, total_test, "r")
+    plt.plot(complexity, total_train)
     
     #plt.title('OLS - Bias')
     #plt.plot(complexity, error_bias[0], label = 'Bias:Test')
@@ -281,7 +273,7 @@ if __name__ == "__main__":
     z = np.ravel(Z)
 
     M = DesignMatrix(X, Y, n)
-
+    #-----------------------------------
     """OLS on Franke function"""
     print("Before train_test:")
     Z = FrankeFunction(X, Y)
@@ -296,6 +288,7 @@ if __name__ == "__main__":
     print("Variance =", var)
     #conf_int = confidence_int(M, z, y_tilde, beta_OLS)
     #plot3d(X, Y, z=np.reshape(y_tilde, Z.shape), z2=Z)
+    #-----------------------------------
     """Resampling"""
     print("Resampling of test data with k_fold:")
     Z = FrankeFunction(X, Y) + noise
@@ -304,6 +297,7 @@ if __name__ == "__main__":
     print("R2-score train set =", R2_train)
     print("MSE test set =", MSE_test)
     print("R2-score test set =", R2_test)
+    #------------------------------------
     """Bias-variance tradeoff"""
     fig_bias_var(X, Y, p=10, n=20)
     
