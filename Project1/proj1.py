@@ -4,6 +4,7 @@ import sklearn.metrics as sklm
 from sklearn.model_selection import train_test_split
 from plots import plot3d
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 
 np.random.seed(1337)
 
@@ -95,8 +96,46 @@ def confidence_int(X, z, z_tilde, beta):
         for i, n in enumerate(percent):
             print("%2i%%: %3.2f +- %3.2f" % (percent[i], beta[k], Z[i]*np.sqrt(sigmaSQ)*varbeta[k]))
 
-def k_fold_CV(X, y, folds):
+def k_fold_CV(X, y, z, folds, n, reg):
     """k-fold cross-validation"""
+    MSE = []
+    R2 = []
+    Var = []
+    Bias = []
+    
+    X_shuffle, Y_shuffle, Z_shuffle = shuffle(X, y, z)
+    
+    x_split = np.array_split(X_shuffle, folds)
+    y_split = np.array_split(Y_shuffle, folds)
+    z_split = np.array_split(Z_shuffle, folds)
+    
+    for i in range(folds):
+        X_test = x_split[i]
+        Y_test = y_split[i]
+        Z_test = z_split[i]
+        
+        X_train = np.delete(x_split, i, axis=0).ravel()
+        Y_train = np.delete(y_split, i, axis=0).ravel()
+        Z_train = np.delete(z_split, i, axis=0).ravel()
+        
+        X_train = DesignMatrix(X_train, Y_train, n)
+        if reg == "OLS":
+            beta = OLS(X_train, Z_train)
+        elif reg == "Ridge":
+            beta = Ridge(X_train, Z_train, lamb)
+        elif reg == "Lasso":
+            beta = Lasso(X_train, Z_train, alpha)
+        
+        X_test = DesignMatrix(X_test, Y_test, n)
+        z_fit = X_test @ beta
+        
+        MSE.append(MSE(Z_test, z_fit))
+        R2.append(R2score(Z_test, z_fit))
+        Var.append(Var(z_fit))
+        Bias.append(Bias(Z_test, z_fit))
+        
+    return np.mean(MSE), np.mean(R2), np.mean(Var), np.mena(Bias)
+    """
     X_train, X_test, Z_train, Z_test = TrainData(X, y, test=0.25)
     x_train = np.split(X_train, folds)
     z_train = np.split(Z_train, folds)
@@ -107,7 +146,7 @@ def k_fold_CV(X, y, folds):
     MSE_test =[]
     R2_train = []
     R2_test = []
-    for i in range(folds):
+    for i in range(folds+1):
         X_train = x_train
         X_train = np.delete(X_train, i, 0)
         X_train = np.concatenate(X_train)
@@ -136,7 +175,7 @@ def k_fold_CV(X, y, folds):
         R2_train = np.append(R2_train, R2_train_i)
         MSE_test = np.append(MSE_test, MSE_test_i)
         R2_test = np.append(R2_test, R2_test_i)
-
+        """
     return np.mean(MSE_train), np.mean(R2_train), np.mean(MSE_test), np.mean(R2_test)
 
 def fig_bias_var(x, y, p=10, n=20):
