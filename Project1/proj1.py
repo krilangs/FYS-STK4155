@@ -2,7 +2,7 @@ import numpy as np
 import sklearn.linear_model as skl
 import sklearn.metrics as sklm
 from sklearn.model_selection import train_test_split
-from plots import plot3d
+from plots import plot3d, plot_conf_int
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
@@ -85,16 +85,28 @@ def Lasso(X, data, alpha):
     beta = clf.coef_
     return beta
 
-def confidence_int(X, z, z_tilde, beta):
+def confidence_int(x, y, z, method=""):
     """Confidence interval of beta"""
-    varbeta = np.sqrt(np.linalg.inv(X.T @ X)).diagonal()
+    X = DesignMatrix(x, y, n=5)
+    if method == "OLS":
+        beta = OLS(X, np.ravel(z))
+    ztilde = X @ beta
+    E, P = np.linalg.eigh(X.T @ X)
+    D_inv = np.diag(1/E)
+    varbeta = np.sqrt(P @ D_inv @ P.T).diagonal()
+    zSTD = np.sum((z - ztilde)**2)/(len(z) - len(beta) - 1)
+    betaSTD = np.sqrt(zSTD)*varbeta
+    #varbeta = np.sqrt(np.linalg.inv(X.T @ X)).diagonal()
     percent = [99, 98, 95, 90]
     Z = [2.576, 2.326, 1.96, 1.645]
-    sigmaSQ = np.sum((z - z_tilde)**2)/(len(z) - len(beta) - 1)
+    #sigmaSQ = np.sum((z - z_tilde)**2)/(len(z) - len(beta) - 1)
+    """
     for k in range(len(beta)):
         print("Confidence interval for beta %i" % (k + 1))
         for i, n in enumerate(percent):
             print("%2i%%: %3.2f +- %3.2f" % (percent[i], beta[k], Z[i]*np.sqrt(sigmaSQ)*varbeta[k]))
+    """
+    return Z[1]*betaSTD
 
 def k_fold_CV(X, y, z, folds, n, reg):
     """k-fold cross-validation"""
@@ -134,7 +146,7 @@ def k_fold_CV(X, y, z, folds, n, reg):
         Var.append(Var(z_fit))
         Bias.append(Bias(Z_test, z_fit))
         
-    return np.mean(MSE), np.mean(R2), np.mean(Var), np.mena(Bias)
+    return np.mean(MSE), np.mean(R2), np.mean(Var), np.mean(Bias)
     """
     X_train, X_test, Z_train, Z_test = TrainData(X, y, test=0.25)
     x_train = np.split(X_train, folds)
@@ -175,10 +187,10 @@ def k_fold_CV(X, y, z, folds, n, reg):
         R2_train = np.append(R2_train, R2_train_i)
         MSE_test = np.append(MSE_test, MSE_test_i)
         R2_test = np.append(R2_test, R2_test_i)
-        """
+    
     return np.mean(MSE_train), np.mean(R2_train), np.mean(MSE_test), np.mean(R2_test)
-
-def fig_bias_var(x, y, p=10, n=20):
+    """
+def fig_bias_var(x, y, p=10, n=20, reg=""):
     """
     Function to plot the test and training errors as
     functions of model complexity (p).
@@ -203,44 +215,50 @@ def fig_bias_var(x, y, p=10, n=20):
         print(i)
         for j in range(p+1):
             X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
+            if reg == "OLS":
+                beta = OLS(X_train, Z_train)
+            elif reg == "Ridge":
+                beta = Ridge(X_train, Z_train, lamb)
+            elif reg == "Lasso":
+                beta = Lasso(X_train, Z_train, alpha)
             # Test data
-            beta_OLS = OLS(X_train, Z_train)
+            #beta_OLS = OLS(X_train, Z_train)
             #beta_Ridge = Ridge(X_train, Z_train, lamb=0.1)
             #beta_k, _, _ = k_fold_CV(X_train, Z_train, 5, shuffle = False)
             #beta_Lasso = Lasso(X_train, Z_train, alpha=0.000001)
             
-            z_tilde_OLS = X_test @ beta_OLS
+            z_tilde = X_test @ beta
             #z_tilde_Ridge = X_test @ beta_Ridge
             #z_tilde_k = X_test @ beta_k
             #z_tilde_Lasso = X_test @ beta_Lasso
             
-            error_MSE[0, j] += MSE(Z_test, z_tilde_OLS)
+            error_MSE[0, j] += MSE(Z_test, z_tilde)
             #error_MSE[1, j] += MSE(Z_test, z_tilde_k)
             #error_MSE[2, j] += MSE(Z_test, z_tilde_Ridge)
             #error_MSE[3, j] += MSE(Z_test, z_tilde_Lasso)
-            error_R2[0, j] += R2score(Z_test, z_tilde_OLS)
+            error_R2[0, j] += R2score(Z_test, z_tilde)
             #error_R2[1, j] += R2score(Z_test, z_tilde_k)
             #error_R2[2, j] += R2score(Z_test, z_tilde_Ridge)
             #error_R2[3, j] += R2score(Z_test, z_tilde_Lasso)
-            error_var[0, j] += Var(z_tilde_OLS)
-            error_bias[0, j] += Bias(z_tilde_OLS, Z_test)
+            error_var[0, j] += Var(z_tilde)
+            error_bias[0, j] += Bias(z_tilde, Z_test)
             
             # Training data
-            z_tilde_OLS = X_train @ beta_OLS
+            z_tilde = X_train @ beta
             #z_tilde_k = X_train @ beta_k
             #z_tilde_Ridge = X_train @ beta_Ridge
             #z_tilde_Lasso = X_train @ beta_Lasso
             
-            error_MSE_train[0, j] += MSE(Z_train, z_tilde_OLS)
+            error_MSE_train[0, j] += MSE(Z_train, z_tilde)
             #error_MSE_train[1, j] += MSE(Z_train, z_tilde_k)
             #error_MSE_train[2, j] += MSE(Z_train, z_tilde_Ridge)
             #error_MSE_train[3, j] += MSE(Z_train, z_tilde_Lasso)
-            error_R2_train[0, j] += R2score(Z_train, z_tilde_OLS)
+            error_R2_train[0, j] += R2score(Z_train, z_tilde)
             #error_R2_train[1, j] += R2score(Z_train, z_tilde_k)
             #error_R2_train[2, j] += R2score(Z_train, z_tilde_Ridge)
             #error_R2_train[3, j] += R2score(Z_train, z_tilde_Lasso)
-            error_var_train[0, j] += Var(z_tilde_OLS)
-            error_bias_train[0, j] += Bias(z_tilde_OLS, Z_test)
+            error_var_train[0, j] += Var(z_tilde)
+            error_bias_train[0, j] += Bias(z_tilde, Z_test)
             
             total_test[j] = error_bias_train[0, j] + error_var_train[0, j] - error_MSE_train[0, j]
             total_test[j] = error_bias[0, j] + error_var[0, j] - error_MSE[0, j]
@@ -298,7 +316,7 @@ def fig_bias_var(x, y, p=10, n=20):
     """
     plt.show()
 
-
+    
 if __name__ == "__main__":
     N = 30
     n = 5
@@ -314,7 +332,7 @@ if __name__ == "__main__":
     M = DesignMatrix(X, Y, n)
     #-----------------------------------
     """OLS on Franke function"""
-    print("Before train_test:")
+    print("a) Before train_test:")
     Z = FrankeFunction(X, Y)
     z = np.ravel(Z)
     beta_OLS = OLS(M, z)
@@ -325,20 +343,21 @@ if __name__ == "__main__":
     print("MSE =", mse)
     print("R2-score =", r2score)
     print("Variance =", var)
-    #conf_int = confidence_int(M, z, y_tilde, beta_OLS)
-    #plot3d(X, Y, z=np.reshape(y_tilde, Z.shape), z2=Z)
+    N = 100
+    #plot_conf_int(N, "OLS")
+    plot3d(X, Y, Z, Z+noise)
     #-----------------------------------
     """Resampling"""
-    print("Resampling of test data with k_fold:")
-    Z = FrankeFunction(X, Y) + noise
-    MSE_train, R2_train, MSE_test, R2_test = k_fold_CV(M, Z, folds=5)
-    print("MSE train set =", MSE_train)
-    print("R2-score train set =", R2_train)
-    print("MSE test set =", MSE_test)
-    print("R2-score test set =", R2_test)
+    #print("b) Resampling of test data with k_fold:")
+    #Z = FrankeFunction(X, Y) + noise
+    #MSE_train, R2_train, MSE_test, R2_test = k_fold_CV(M, Z, folds=5)
+    #print("MSE train set =", MSE_train)
+    #print("R2-score train set =", R2_train)
+    #print("MSE test set =", MSE_test)
+    #print("R2-score test set =", R2_test)
     #------------------------------------
     """Bias-variance tradeoff"""
-    fig_bias_var(X, Y, p=10, n=20)
+    #fig_bias_var(X, Y, p=10, n=20, reg="OLS")
     
 """
 from matplotlib import cm
