@@ -62,8 +62,8 @@ def BIAS(data, model):
 def TrainData(M, v, test=0.25):
     """Split data in training data and test data"""
     z = np.ravel(v)
-    X_train, X_test, Z_train, z_test = train_test_split(M, z, test_size=test, shuffle=True)
-    return X_train, X_test, Z_train, z_test
+    X_train, X_test, Z_train, Z_test = train_test_split(M, z, test_size=test, shuffle=True)
+    return X_train, X_test, Z_train, Z_test
 
 def OLS(X, data):
     """Ordinary least squared using singular value decomposition (SVD)"""
