@@ -4,6 +4,8 @@ import sklearn.model_selection as sklms
 import sklearn.linear_model as skl
 from proj1 import FrankeFunction, DesignMatrix, OLS, TrainData, k_fold_CV
 
+np.random.seed(1337)
+
 def test_OLS(N, n):
     print("Test OLS against scikit:")
     x = np.sort(np.random.uniform(0, 1, N))
@@ -34,7 +36,7 @@ def test_KFold(N, n):
     noise = 0.8*np.random.normal(0, 1, size=X.shape)
     Z = FrankeFunction(X, Y) + noise
 
-    Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, reg="OLS")
+    Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, reg="OLS", train=False)
     print("MSE k-fold = ", Mse)
     X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
     kfold = sklms.KFold(n_splits=5, shuffle=True)
