@@ -1,7 +1,7 @@
 import numpy as np
 import sklearn.linear_model as skl
 import sklearn.metrics as sklm
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from plots import plot3d, plot_conf_int
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
@@ -48,12 +48,12 @@ def R2score(data, model):
 #    y_model = np.ravel(model)
 #    return abs((y_data-y_model)/y_data)
 
-def Var(model):
+def VAR(model):
     """Variance"""
     y_tilde = np.ravel(model)
     return np.mean((y_tilde - np.mean(y_tilde))**2)
 
-def Bias(data, model):
+def BIAS(data, model):
     """Bias"""
     y = np.ravel(model)
     y_tilde = np.ravel(data)
@@ -62,7 +62,7 @@ def Bias(data, model):
 def TrainData(M, v, test=0.25):
     """Split data in training data and test data"""
     z = np.ravel(v)
-    X_train, X_test, Z_train, z_test = train_test_split(M, z, test_size=test)
+    X_train, X_test, Z_train, z_test = train_test_split(M, z, test_size=test, shuffle=True)
     return X_train, X_test, Z_train, z_test
 
 def OLS(X, data):
@@ -73,15 +73,15 @@ def OLS(X, data):
     beta = Xinv @ X.T @ data
     return beta
 
-def Ridge(X, data, lamb):
+def Ridge(X, data, hyperparam):
     """Ridge regression"""
     beta_OLS = OLS(X, data)
-    beta_ridge = beta_OLS*1./(1.+lamb)
+    beta_ridge = beta_OLS*1./(1. + hyperparam)
     return beta_ridge
     
-def Lasso(X, data, alpha):
+def Lasso(X, data, hyperparam):
     """Lasso regression"""
-    clf = skl.Lasso(alpha).fit(X, np.ravel(data))
+    clf = skl.Lasso(alpha=hyperparam, max_iter=1e3, tol=1e-1).fit(X, np.ravel(data))
     beta = clf.coef_
     return beta
 
@@ -96,26 +96,24 @@ def confidence_int(x, y, z, method=""):
     varbeta = np.sqrt(P @ D_inv @ P.T).diagonal()
     zSTD = np.sum((z - ztilde)**2)/(len(z) - len(beta) - 1)
     betaSTD = np.sqrt(zSTD)*varbeta
-    #varbeta = np.sqrt(np.linalg.inv(X.T @ X)).diagonal()
-    percent = [99, 98, 95, 90]
     Z = [2.576, 2.326, 1.96, 1.645]
-    #sigmaSQ = np.sum((z - z_tilde)**2)/(len(z) - len(beta) - 1)
     """
+    percent = [99, 98, 95, 90]
     for k in range(len(beta)):
         print("Confidence interval for beta %i" % (k + 1))
         for i, n in enumerate(percent):
-            print("%2i%%: %3.2f +- %3.2f" % (percent[i], beta[k], Z[i]*np.sqrt(sigmaSQ)*varbeta[k]))
+            print("%2i%%: %3.2f +- %3.2f" % (percent[i], beta[k], Z[i]*betaSTD[k]))
     """
     return Z[1]*betaSTD
 
-def k_fold_CV(X, y, z, folds, n, reg):
+def k_fold_CV(x, y, z, folds, dim, hyperparam, reg=""):
     """k-fold cross-validation"""
-    MSE = []
-    R2 = []
-    Var = []
-    Bias = []
+    Mse = np.zeros(folds)
+    R2 = np.zeros(folds)
+    Var = np.zeros(folds)
+    Bias = np.zeros(folds)
     
-    X_shuffle, Y_shuffle, Z_shuffle = shuffle(X, y, z)
+    X_shuffle, Y_shuffle, Z_shuffle = shuffle(x, y, z)
     
     x_split = np.array_split(X_shuffle, folds)
     y_split = np.array_split(Y_shuffle, folds)
@@ -130,23 +128,22 @@ def k_fold_CV(X, y, z, folds, n, reg):
         Y_train = np.delete(y_split, i, axis=0).ravel()
         Z_train = np.delete(z_split, i, axis=0).ravel()
         
-        X_train = DesignMatrix(X_train, Y_train, n)
+        X_train = DesignMatrix(X_train, Y_train, dim)
         if reg == "OLS":
             beta = OLS(X_train, Z_train)
         elif reg == "Ridge":
-            beta = Ridge(X_train, Z_train, lamb)
+            beta = Ridge(X_train, Z_train, hyperparam)
         elif reg == "Lasso":
-            beta = Lasso(X_train, Z_train, alpha)
+            beta = Lasso(X_train, Z_train, hyperparam)
         
-        X_test = DesignMatrix(X_test, Y_test, n)
+        X_test = DesignMatrix(X_test, Y_test, dim)
         z_fit = X_test @ beta
+        Mse[i] = MSE(Z_test, z_fit)
+        R2[i] = R2score(Z_test, z_fit)
+        Var[i] = VAR(z_fit)
+        Bias[i] = BIAS(Z_test, z_fit)
         
-        MSE.append(MSE(Z_test, z_fit))
-        R2.append(R2score(Z_test, z_fit))
-        Var.append(Var(z_fit))
-        Bias.append(Bias(Z_test, z_fit))
-        
-    return np.mean(MSE), np.mean(R2), np.mean(Var), np.mean(Bias)
+    return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
     """
     X_train, X_test, Z_train, Z_test = TrainData(X, y, test=0.25)
     x_train = np.split(X_train, folds)
@@ -190,7 +187,7 @@ def k_fold_CV(X, y, z, folds, n, reg):
     
     return np.mean(MSE_train), np.mean(R2_train), np.mean(MSE_test), np.mean(R2_test)
     """
-def fig_bias_var(x, y, p=10, n=20, reg=""):
+def fig_bias_var(x, y, hyperparam, p=10, n=20, reg=""):
     """
     Function to plot the test and training errors as
     functions of model complexity (p).
@@ -218,9 +215,9 @@ def fig_bias_var(x, y, p=10, n=20, reg=""):
             if reg == "OLS":
                 beta = OLS(X_train, Z_train)
             elif reg == "Ridge":
-                beta = Ridge(X_train, Z_train, lamb)
+                beta = Ridge(X_train, Z_train, hyperparam)
             elif reg == "Lasso":
-                beta = Lasso(X_train, Z_train, alpha)
+                beta = Lasso(X_train, Z_train, hyperparam)
             # Test data
             #beta_OLS = OLS(X_train, Z_train)
             #beta_Ridge = Ridge(X_train, Z_train, lamb=0.1)
@@ -332,32 +329,35 @@ if __name__ == "__main__":
     M = DesignMatrix(X, Y, n)
     #-----------------------------------
     """OLS on Franke function"""
-    print("a) Before train_test:")
+    print("a) Before train_test without noise:")
     Z = FrankeFunction(X, Y)
     z = np.ravel(Z)
     beta_OLS = OLS(M, z)
     y_tilde = M @ beta_OLS
     mse = MSE(Z, y_tilde)
     r2score = R2score(Z, y_tilde)
-    var = Var(y_tilde)
+    var = VAR(y_tilde)
     print("MSE =", mse)
     print("R2-score =", r2score)
     print("Variance =", var)
     N = 100
     #plot_conf_int(N, "OLS")
-    plot3d(X, Y, Z, Z+noise)
+    #plot3d(X, Y, Z, Z+noise)
     #-----------------------------------
     """Resampling"""
-    #print("b) Resampling of test data with k_fold:")
-    #Z = FrankeFunction(X, Y) + noise
-    #MSE_train, R2_train, MSE_test, R2_test = k_fold_CV(M, Z, folds=5)
-    #print("MSE train set =", MSE_train)
-    #print("R2-score train set =", R2_train)
-    #print("MSE test set =", MSE_test)
-    #print("R2-score test set =", R2_test)
+    print("b) Resampling of test data with k_fold:")
+    Z = FrankeFunction(X, Y) + noise
+    z = np.ravel(Z)
+
+    Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, reg="OLS")
+    print("MSE k-fold =", Mse)
+    print("R2-score k-fold =", R2)
+    print("Variance k-fold=", Var)
+    print("Bias k-fold =", Bias)
     #------------------------------------
     """Bias-variance tradeoff"""
     #fig_bias_var(X, Y, p=10, n=20, reg="OLS")
+    
     
 """
 from matplotlib import cm
