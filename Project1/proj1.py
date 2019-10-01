@@ -2,7 +2,7 @@ import numpy as np
 import sklearn.linear_model as skl
 import sklearn.metrics as sklm
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
-from plots import plot3d, plot_conf_int
+from plots import plot3d, plot_conf_int, fig_bias_var
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
@@ -106,12 +106,14 @@ def confidence_int(x, y, z, method=""):
     """
     return Z[1]*betaSTD
 
-def k_fold_CV(x, y, z, folds, dim, hyperparam, reg=""):
+def k_fold_CV(x, y, z, folds, dim, hyperparam, reg="", train=False):
     """k-fold cross-validation"""
     Mse = np.zeros(folds)
     R2 = np.zeros(folds)
     Var = np.zeros(folds)
     Bias = np.zeros(folds)
+    if train:
+        Mse_train = np.zeros(folds)
     
     X_shuffle, Y_shuffle, Z_shuffle = shuffle(x, y, z)
     
@@ -139,11 +141,16 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, reg=""):
         X_test = DesignMatrix(X_test, Y_test, dim)
         z_fit = X_test @ beta
         Mse[i] = MSE(Z_test, z_fit)
+        if train:
+            z_train = X_train @ beta
+            Mse_train[i] = MSE(Z_train, z_train)
         R2[i] = R2score(Z_test, z_fit)
         Var[i] = VAR(z_fit)
         Bias[i] = BIAS(Z_test, z_fit)
-        
-    return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
+    if train:
+        return np.mean(Mse), np.mean(Mse_train)
+    else:
+        return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
     """
     X_train, X_test, Z_train, Z_test = TrainData(X, y, test=0.25)
     x_train = np.split(X_train, folds)
@@ -187,131 +194,7 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, reg=""):
     
     return np.mean(MSE_train), np.mean(R2_train), np.mean(MSE_test), np.mean(R2_test)
     """
-def fig_bias_var(x, y, hyperparam, p=10, n=20, reg=""):
-    """
-    Function to plot the test and training errors as
-    functions of model complexity (p).
-    """
-    error_MSE = np.zeros((1, p+1))
-    error_R2 = np.zeros_like(error_MSE)
-    error_var = np.zeros_like(error_MSE)
-    error_bias = np.zeros_like(error_MSE)
-    
-    error_MSE_train = np.zeros_like(error_MSE)
-    error_R2_train = np.zeros_like(error_MSE)
-    error_var_train = np.zeros_like(error_MSE)
-    error_bias_train = np.zeros_like(error_MSE)
-    
-    total_train = np.zeros(p+1)
-    total_test = np.zeros(p+1)
-    
-    complexity = np.arange(0, p+1, 1)
-    
-    for i in range(n):
-        Z = FrankeFunction(x, y)# + 0.6*np.random.normal(0, 1, size=x.shape)
-        print(i)
-        for j in range(p+1):
-            X_train, X_test, Z_train, Z_test = TrainData(M, Z, test=0.25)
-            if reg == "OLS":
-                beta = OLS(X_train, Z_train)
-            elif reg == "Ridge":
-                beta = Ridge(X_train, Z_train, hyperparam)
-            elif reg == "Lasso":
-                beta = Lasso(X_train, Z_train, hyperparam)
-            # Test data
-            #beta_OLS = OLS(X_train, Z_train)
-            #beta_Ridge = Ridge(X_train, Z_train, lamb=0.1)
-            #beta_k, _, _ = k_fold_CV(X_train, Z_train, 5, shuffle = False)
-            #beta_Lasso = Lasso(X_train, Z_train, alpha=0.000001)
-            
-            z_tilde = X_test @ beta
-            #z_tilde_Ridge = X_test @ beta_Ridge
-            #z_tilde_k = X_test @ beta_k
-            #z_tilde_Lasso = X_test @ beta_Lasso
-            
-            error_MSE[0, j] += MSE(Z_test, z_tilde)
-            #error_MSE[1, j] += MSE(Z_test, z_tilde_k)
-            #error_MSE[2, j] += MSE(Z_test, z_tilde_Ridge)
-            #error_MSE[3, j] += MSE(Z_test, z_tilde_Lasso)
-            error_R2[0, j] += R2score(Z_test, z_tilde)
-            #error_R2[1, j] += R2score(Z_test, z_tilde_k)
-            #error_R2[2, j] += R2score(Z_test, z_tilde_Ridge)
-            #error_R2[3, j] += R2score(Z_test, z_tilde_Lasso)
-            error_var[0, j] += Var(z_tilde)
-            error_bias[0, j] += Bias(z_tilde, Z_test)
-            
-            # Training data
-            z_tilde = X_train @ beta
-            #z_tilde_k = X_train @ beta_k
-            #z_tilde_Ridge = X_train @ beta_Ridge
-            #z_tilde_Lasso = X_train @ beta_Lasso
-            
-            error_MSE_train[0, j] += MSE(Z_train, z_tilde)
-            #error_MSE_train[1, j] += MSE(Z_train, z_tilde_k)
-            #error_MSE_train[2, j] += MSE(Z_train, z_tilde_Ridge)
-            #error_MSE_train[3, j] += MSE(Z_train, z_tilde_Lasso)
-            error_R2_train[0, j] += R2score(Z_train, z_tilde)
-            #error_R2_train[1, j] += R2score(Z_train, z_tilde_k)
-            #error_R2_train[2, j] += R2score(Z_train, z_tilde_Ridge)
-            #error_R2_train[3, j] += R2score(Z_train, z_tilde_Lasso)
-            error_var_train[0, j] += Var(z_tilde)
-            error_bias_train[0, j] += Bias(z_tilde, Z_test)
-            
-            total_test[j] = error_bias_train[0, j] + error_var_train[0, j] - error_MSE_train[0, j]
-            total_test[j] = error_bias[0, j] + error_var[0, j] - error_MSE[0, j]
-            #print("Bias + Var - MSE=", error_bias[0, j] + error_var[0, j] - error_MSE[0, j])
-    error_MSE /= n
-    error_R2 /= n
-    error_var /= n
-    error_MSE_train /= n
-    error_R2_train /= n
-    error_var_train /= n
 
-    #plt.title('OLS - MSE')
-    plt.figure()
-    plt.plot(complexity, error_MSE[0], label = 'MSE:Test')
-    plt.plot(complexity, error_var[0], label = 'Var:Test')
-    plt.plot(complexity, error_bias[0], label = 'Bias:Test')
-    #plt.plot(complexity, error_MSE_train[0], label = 'MSE:Training')
-    #plt.ylim([0, np.max(error_MSE[0]*1.2)])
-    plt.legend()
-    plt.figure()
-    #plt.title('OLS - Var')
-    #plt.plot(complexity, error_var[0], label = 'Var:Test')
-    plt.plot(complexity, error_MSE_train[0], label = 'MSE:Training')
-    plt.plot(complexity, error_var_train[0], label = 'Var:Training')
-    plt.plot(complexity, error_bias_train[0], label = 'Bias:Training')
-    #plt.ylim([0, np.max(error_MSE[0]*1.2)])
-    plt.legend()
-    
-    plt.figure()
-    plt.plot(complexity, total_test, "r")
-    plt.plot(complexity, total_train)
-    
-    #plt.title('OLS - Bias')
-    #plt.plot(complexity, error_bias[0], label = 'Bias:Test')
-    #plt.plot(complexity, error_bias_train[0], label = 'Bias:Training')
-    #plt.ylim([0, np.max(error_MSE[0]*1.2)])
-    #plt.legend()
-    """
-    plt.title('k-fold')
-    plt.plot(complexity, error_MSE[1], label = 'Test')
-    plt.plot(complexity, error_MSE_train[1], label = 'Training')
-    plt.ylim([0, np.max(error_MSE[1]*1.2)])
-
-    plt.title('Ridge')
-    plt.plot(complexity, error_MSE[2], label = 'Test')
-    plt.plot(complexity, error_MSE_train[2], label = 'Training')
-    plt.ylim([0, np.max(error_MSE[2]*1.2)])
-    plt.legend()
-
-    plt.title('Lasso')
-    plt.plot(complexity, error_MSE[3], label = 'Test')
-    plt.plot(complexity, error_MSE_train[3], label = 'Training')
-    plt.ylim([0, np.max(error_MSE[3]*1.2)])
-    plt.legend()
-    """
-    plt.show()
 
     
 if __name__ == "__main__":
@@ -330,6 +213,7 @@ if __name__ == "__main__":
     #-----------------------------------
     """OLS on Franke function"""
     print("a) Before train_test without noise:")
+
     Z = FrankeFunction(X, Y)
     z = np.ravel(Z)
     beta_OLS = OLS(M, z)
@@ -337,6 +221,7 @@ if __name__ == "__main__":
     mse = MSE(Z, y_tilde)
     r2score = R2score(Z, y_tilde)
     var = VAR(y_tilde)
+
     print("MSE =", mse)
     print("R2-score =", r2score)
     print("Variance =", var)
@@ -346,17 +231,18 @@ if __name__ == "__main__":
     #-----------------------------------
     """Resampling"""
     print("b) Resampling of test data with k_fold:")
+
     Z = FrankeFunction(X, Y) + noise
     z = np.ravel(Z)
+    Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, reg="OLS", train=False)
 
-    Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, reg="OLS")
     print("MSE k-fold =", Mse)
     print("R2-score k-fold =", R2)
     print("Variance k-fold=", Var)
     print("Bias k-fold =", Bias)
     #------------------------------------
     """Bias-variance tradeoff"""
-    #fig_bias_var(X, Y, p=10, n=20, reg="OLS")
+    fig_bias_var(X, Y, hyperparam=1, p=10, reg="OLS")
     
     
 """
