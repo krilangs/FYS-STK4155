@@ -40,7 +40,7 @@ def test_Ridge(N, n, hyperparam):
     # Scikit
     ridge_scikit = skl.Ridge(alpha=hyperparam).fit(X_train, Z_train)
     evalmodel_scikit = ridge_scikit.predict(X_test)
-    np.testing.assert_allclose(evalmodel_scikit, ytilde, rtol=0.6)
+    np.testing.assert_allclose(evalmodel_scikit, ytilde, rtol=0.2)
     
 def test_KFold(N, n):
     print("Test k-fold with scikit:")
