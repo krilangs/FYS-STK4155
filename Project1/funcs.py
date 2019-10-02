@@ -1,9 +1,6 @@
 import numpy as np
 import sklearn.linear_model as skl
-import sklearn.metrics as sklm
-from sklearn.model_selection import train_test_split, KFold, cross_val_score
-from plots import plot3d, plot_conf_int, fig_bias_var
-import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 import scipy
 
@@ -43,12 +40,6 @@ def R2score(data, model):
     y_model = np.ravel(model)
     return 1 - np.sum((y_data-y_model)**2)/np.sum((y_data-np.mean(y_data))**2)
 
-#def RelativeError(data, model):
-#    """Relative error"""
-#    y_data = np.ravel(data)
-#    y_model = np.ravel(model)
-#    return abs((y_data-y_model)/y_data)
-
 def VAR(model):
     """Variance"""
     y_model = np.ravel(model)
@@ -85,7 +76,7 @@ def Ridge(X, data, hyperparam):
     
 def Lasso(X, data, hyperparam):
     """Lasso regression"""
-    clf = skl.Lasso(alpha=hyperparam, max_iter=5e5, tol=0.015).fit(X, np.ravel(data))
+    clf = skl.Lasso(alpha=hyperparam, max_iter=1e5, tol=0.1).fit(X, data)
     beta = clf.coef_
     beta[0] = clf.intercept_
     return beta
@@ -95,8 +86,10 @@ def confidence_int(x, y, z, hyperparam, method=""):
     X = DesignMatrix(x, y, n=5)
     if method == "OLS":
         beta = OLS(X, np.ravel(z))
-    if method == "Ridge":
+    elif method == "Ridge":
         beta = Ridge(X, np.ravel(z), hyperparam)
+    elif method == "Lasso":
+        beta = Lasso(X, z, hyperparam)
     ztilde = X @ beta
     E, P = np.linalg.eigh(X.T @ X)
     D_inv = np.diag(1/E)
@@ -159,100 +152,4 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
         return np.mean(Mse), np.mean(Mse_train)
     else:
         return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
-
-    
-if __name__ == "__main__":
-    N = 40
-    n = 5
-
-    x = np.sort(np.random.uniform(0, 1, N))
-    y = np.sort(np.random.uniform(0, 1, N))
-
-    X, Y = np.meshgrid(x, y)
-    noise = 0.8*np.random.normal(0, 1, size=X.shape)
-    Z = FrankeFunction(X, Y) + noise
-    z = np.ravel(Z)
-
-    M = DesignMatrix(X, Y, n)
-    #-----------------------------------
-    """OLS on Franke function"""
-    print("a) Before train_test without noise:")
-    Z = FrankeFunction(X, Y)
-    z = np.ravel(Z)
-    beta_OLS = OLS(M, z)
-    y_tilde = M @ beta_OLS
-    mse_OLS = MSE(Z, y_tilde)
-    r2score_OLS = R2score(Z, y_tilde)
-    var_OLS = VAR(y_tilde)
-
-    print("MSE =", mse_OLS)
-    print("R2-score =", r2score_OLS)
-    print("Variance =", var_OLS)
-    N = 100
-    #plot_conf_int(N, hyperparam=1, method="OLS")
-    #plot3d(X, Y, Z, Z+noise)
-    #-----------------------------------
-    """Resampling"""
-    print("b) Resampling of test data with k_fold:")
-    Z = FrankeFunction(X, Y) + noise
-    #Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, method="OLS", train=False)
-
-    #print("MSE k-fold =", Mse)
-    #print("R2-score k-fold =", R2)
-    #print("Variance k-fold=", Var)
-    #print("Bias k-fold =", Bias)
-    #------------------------------------
-    """Bias-variance tradeoff"""
-    print("c) Plotting bias-variance tradeoff:")
-    #fig_bias_var(X, Y, hyperparam=1, p=12, method="OLS")
-    #------------------------------------
-    """Ridge Regression"""
-    print("d) Ridge analysis:")
-    """
-    lambda_Ridge = np.logspace(-7, 1, 9)
-    #print(lambda_Ridge)
-    Z = FrankeFunction(X, Y)
-    z = np.ravel(Z)
-    for i in lambda_Ridge: 
-        beta_Ridge = Ridge(M, z, hyperparam=i)
-        y_tilde = M @ beta_Ridge
-        mse_Ridge = MSE(Z, y_tilde)
-        r2score_Ridge = R2score(Z, y_tilde)
-        var_Ridge = VAR(y_tilde)
-        #print("Lambda=",i)
-        #print("MSE =", mse_Ridge)
-        #print("R2-score =", r2score_Ridge)
-        #print("Variance =", var_Ridge)
-    lambda_params = [10, 0.1, 1e-3, 1e-6, 1e-10]
-    Z = FrankeFunction(X, Y) + noise
-    #for j in lambda_params:
-    #    plot_conf_int(N, hyperparam=j, method="Ridge")
-    
-        #Mse, R2, Var, Bias = k_fold_CV(X, Y, Z, folds=5, dim=5, hyperparam=1, method="Ridge", train=False)
-        #print("MSE k-fold =", Mse)
-        #print("R2-score k-fold =", R2)
-        #print("Variance k-fold=", Var)
-        #print("Bias k-fold =", Bias)
-
-        #fig_bias_var(X, Y, hyperparam=j, p=12, method="Ridge")
-    """
-    #------------------------------------
-    """Lasso Regression"""
-    print("e) Lasso analysis")
-    Z = FrankeFunction(X, Y)
-    z = np.ravel(Z)
-    beta_Lasso = Lasso(M, z, hyperparam=0.01)  # lambda=0 should give ~OLS
-    y_tilde = M @ beta_Lasso
-    mse_Lasso = MSE(Z, y_tilde)
-    r2score_Lasso = R2score(Z, y_tilde)
-    var_Lasso = VAR(y_tilde)
-
-    print("MSE =", mse_Lasso)
-    print("R2-score =", r2score_Lasso)
-    print("Variance =", var_Lasso)
-
-
-
-
-
 
