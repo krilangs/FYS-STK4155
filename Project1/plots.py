@@ -50,7 +50,7 @@ def plot_conf_int(N, hyperparam, method=""):
     """
     Function to plot the confidence interval of beta.
     """
-    from proj1 import FrankeFunction, DesignMatrix, confidence_int, OLS, Ridge, Lasso
+    from funcs import FrankeFunction, DesignMatrix, confidence_int, OLS, Ridge, Lasso
     
     fsize = 10 			# universal fontsize for plots
     path = "figures/"
@@ -114,7 +114,7 @@ def fig_bias_var(x, y, p=10, method=""):
     Function to plot the test and training errors as
     functions of model complexity (p).
     """
-    from proj1 import FrankeFunction, k_fold_CV
+    from funcs import FrankeFunction, k_fold_CV
 
     Z = FrankeFunction(x, y)
     Zn = FrankeFunction(x, y) + 0.8*np.random.normal(0, 1, size=x.shape)
@@ -427,4 +427,4 @@ def terrain():
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show()
-terrain()
+#terrain()
