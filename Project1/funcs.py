@@ -2,9 +2,9 @@ import numpy as np
 import sklearn.linear_model as skl
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
-import scipy
+import scipy.linalg as scl
 
-np.random.seed(1337)
+np.random.seed(777)
 
 def DesignMatrix(x, y, n):
     """Create design matrix"""
@@ -59,26 +59,26 @@ def TrainData(M, v, test=0.25):
 
 def OLS(X, data):
     """Ordinary least squared using singular value decomposition (SVD)"""
-    U, s, VT = np.linalg.svd(X)
-    D = np.diag(s**2)
-    Xinv = np.linalg.inv(VT.T @ D @ VT)
-    beta = Xinv @ X.T @ data
+    U, s, VT = scl.svd(X)
+    D = scl.diagsvd(s, U.shape[0], VT.shape[0])
+    beta = VT.T @ scl.pinv(D) @ U.T @ data
     return beta
 
 def Ridge(X, data, hyperparam):
     """Ridge regression"""
-    U, s, V = np.linalg.svd(X)
-    sigma = np.zeros(X.shape)
-    sigma[:len(s), :len(s)] = np.diag(s)
-    inverse = scipy.linalg.inv(sigma.T.dot(sigma) + hyperparam*np.identity(len(s)))
-    beta = V.T.dot(inverse).dot(sigma.T).dot(U.T).dot(data)
+    #U, s, V = np.linalg.svd(X)
+    #sigma = np.zeros(X.shape)
+    #sigma[:len(s), :len(s)] = np.diag(s)
+    #inverse = scipy.linalg.inv(sigma.T.dot(sigma) + hyperparam*np.identity(len(s)))
+    #beta = V.T.dot(inverse).dot(sigma.T).dot(U.T).dot(data)
+    beta = OLS(X, data)/(1 + hyperparam)
     return beta
     
 def Lasso(X, data, hyperparam):
     """Lasso regression"""
-    clf = skl.Lasso(alpha=hyperparam, max_iter=1e5, tol=0.1).fit(X, data)
+    clf = skl.Lasso(alpha=hyperparam, max_iter=1e6, tol=0.1, fit_intercept=False).fit(X, data)
     beta = clf.coef_
-    beta[0] = clf.intercept_
+    #beta[0] = clf.intercept_
     return beta
 
 def confidence_int(x, y, z, hyperparam, method=""):
@@ -112,7 +112,7 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
     R2 = np.zeros(folds)
     Var = np.zeros(folds)
     Bias = np.zeros(folds)
-    if train:
+    if train is True:
         Mse_train = np.zeros(folds)
     
     X_shuffle, Y_shuffle, Z_shuffle = shuffle(x, y, z)
@@ -142,14 +142,17 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
         
         z_fit = X_test @ beta
         Mse[i] = MSE(Z_test, z_fit)
-        if train:
+        if train is True:
             z_train = X_train @ beta
             Mse_train[i] = MSE(Z_train, z_train)
         R2[i] = R2score(Z_test, z_fit)
         Var[i] = VAR(z_fit)
         Bias[i] = BIAS(Z_test, z_fit)
-    if train:
+    if train is True:
         return np.mean(Mse), np.mean(Mse_train)
     else:
         return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
 
+def make_tab(A, task="", string=""):
+    """Save an array to a document for easier implementing into LaTeX"""
+    np.savetxt("mydata_"+str(task)+".txt", A, delimiter=' & ', fmt="%."+str(string), newline=' \\\\\n')
