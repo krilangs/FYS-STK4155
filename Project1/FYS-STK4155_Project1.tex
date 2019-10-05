@@ -1,0 +1,97 @@
+\documentclass[12pt,a4paper,english]{article}
+\usepackage{times}
+\usepackage[utf8]{inputenc}
+\usepackage{babel,textcomp}
+\usepackage{mathpazo}
+\usepackage{mathtools}
+\usepackage{amsmath,amssymb}
+\usepackage{ dsfont }
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfig} 
+\usepackage[colorlinks]{hyperref}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{backgroundcolor=\color{lbcolor},tabsize=4,rulecolor=,language=python,basicstyle=\scriptsize,upquote=true,aboveskip={1.5\baselineskip},columns=fixed,numbers=left,showstringspaces=false,extendedchars=true,breaklines=true,
+prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,showtabs=false,showspaces=false,showstringspaces=false,identifierstyle=\ttfamily,keywordstyle=\color[rgb]{0,0,1},commentstyle=\color[rgb]{0.133,0.545,0.133},stringstyle=\color[rgb]{0.627,0.126,0.941},literate={å}{{\r a}}1 {Å}{{\r A}}1 {ø}{{\o}}1}
+
+% Use for references
+%\usepackage[sort&compress,square,comma,numbers]{natbib}
+%\DeclareRobustCommand{\citeext}[1]{\citeauthor{#1}~\cite{#1}}
+
+% Fix spacing in tables and figures
+%\usepackage[belowskip=-8pt,aboveskip=5pt]{caption}
+%\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+% Change the page layout
+%\usepackage[showframe]{geometry}
+\usepackage{layout}
+\setlength{\hoffset}{-0.5in}  % Length left
+%\setlength{\voffset}{-1.1in}  % Length on top
+\setlength{\textwidth}{470pt}  % Width
+%\setlength{\textheight}{720pt}  % Height
+%\setlength{\footskip}{25pt}
+
+\newcommand{\VEV}[1]{\langle#1\rangle}
+\title{FYS-STK 4155 Project 1}
+\date{}
+\author{ Kristoffer Langstad\\ \textit{krilangs@uio.no}}
+
+\begin{document}%layout
+\maketitle
+\begin{abstract}
+	
+\end{abstract}
+
+\section{Introduction}
+A hot topic today is what we call machine learning. We use machine learning to analyze data (often a huge amount). There are now many different methods for doing this, where some are better than others in different cases. A way to study machine learning is to look at regression analysis and resampling methods of given data sets, which is split into what we call training and test data. Then we can study the data dependence and the effect of different hyper-parameters.
+
+We will in this project study three linear regression methods: the Ordinary Least Squares (OLS), Ridge regression and Lasso regression. In linear regression we will fit a polynomial to a given data set that we want to analyze. Linear regression let use look at relationships in data sets that are normally hidden under complexities and huge quantities of data. In our case we will first fit a polynomial to a two-dimensional function called Franke's function (which we will look at later). After implementing the regression methods we will use resampling techniques, like cross-validation, to perform a more thorough assessment of the models we have. Then we can also look at the Bias-Variance tradeoff as we look at a varying model complexity of the data set and models. Lastly we will use all the techniques we have mentioned to analyze real data terrain to see which model and degree of polynomial has the best fit.
+
+In the methods section we look at the theory of the different models, techniques and the implementations of the algorithms we use in this project. We start by looking at the OLS of the Franke function where we use the Franke function, with and without an additional normally distributed stochastic noise, to produce a dataset to study with OLS regression. Then we want to fit a polynomial up to fifth order, and study the confidence interval of $\beta$ by computing the Mean Squared Error (MSE), $R^2$ score function and variance. Then we perform a resampling of the data where we split the data into training and test data. Then we construct the k-fold cross-validation algorithm and evaluate the MSE, $R^2$ score, variance and bias of the test data. For further studying machine learning, we study the bias and variance tradeoff as function of model complexity and number of data points. Now we have all the techniques we are using, so now we use the same techniques on the Ridge and Lasso method. For these two methods there is a hyperparameter dependence which we will also study. Then we want to introduce real terrain data to analyze. We use all three of the linear regression methods to evaluate which model fits the data best. In the Results section we look at the results and discuss all the methods and techniques used in this project. Here we look at data outputs and figures we get underway. Lastly in the Conclusion section we summarize the results and come up our thoughts on which model is the best fit for the terrain data.
+
+\section{Methods}
+\subsection{Linear regression}
+In linear regression we want to fit a model to a set of data. For fitting a model to a set of data $\textbf{y}=[y_0, y_1,...,y_{n-1}]$ of length $n$ which are functions of some variables $\textbf{x}=[x_0, x_1,...,x_{n-1}]$. We can then define the prediction value $y$ as
+\begin{equation}
+\label{eq:pred_y}
+y(x_i)=y_i=f(\cdot)+\epsilon_i=\sum_{n-1}^{i=0}\beta_jx_i^j+\epsilon_i,
+\end{equation}
+where $\beta$ are regression parameters and $\epsilon_i$ is a normally distributed error with mean zero and variance $\sigma^2$. The goal is to find the optimal regression parameters $\beta$. This can be done with different methods like OLS, Ridge and Lasso.
+
+\subsection{Ordinary Least Square (OLS)}
+In OLS we find the $\beta$ values that minimize the residual sum of squares (RSS), which here is a cost function dependent on the given data $y_i$ (data) and the parametrized values $\tilde{\textbf{y}}_i=\textbf{X}\hat{\beta}$ (model):
+\begin{equation}
+C(\hat{\beta})=\frac{1}{n}\sum_{i=0}^{n-1}(y_i-\tilde{y}_i)^2=\frac{1}{n}\sum_{i=0}^{n-1}(y_i-\textbf{x}_{i*}\hat{\beta})^2=\frac{1}{n}\{(\textbf{y}-\textbf{X}\hat{\beta})^T(\textbf{y}-\textbf{X}\hat{\beta})\}
+\end{equation} 
+\textbf{X} is our design matrix which contains the predictors. Then to find the minimum of the cost function we set $\frac{\partial C}{\partial \hat{\beta}}=0$ and solve
+\[\min_{\hat{\beta}\in \mathcal{R}^p}C(\hat{\beta}).\] This should give us the optimal $\beta$ values as
+\begin{equation}
+\label{eq:beta_OLS_opt}
+\hat{\beta}_{\text{optimal}}=(\textbf{X}^T\textbf{X})^{-1}\textbf{X}^T\textbf{y}
+\end{equation}
+These $\beta$ values are the model values in the OLS model.
+
+Taking the inverse of a matrix product (\textbf{X}$^T$\textbf{X})$^{-1}$ may be an expensive operation for bigger matrices. That is why we take use of the Singular Value Decomposition (SVD) to prevent taking the inverse of the product of twp big matrices. From the SVD theorem we can expand our design matrix as:
+\[\textbf{X}=\textbf{U}\textbf{D}\textbf{V}^T\]
+This is written in terms of the orthogonal transformation \textbf{U}, the diagonal matrix \textbf{D} containing the eigenvalues and \textbf{V}$^T$ which is also an orthogonal matrix. By inserting this into the OLS we get:
+\begin{equation}
+\label{eq:beta_SVD_OLS}
+\tilde{\textbf{y}}=\textbf{X}\hat{\beta}_{\text{optimal}}=\textbf{U}\textbf{U}^T\textbf{y}
+\end{equation}
+This is now a more CPU friendly calculation of the OLS for finding the regression parameters $\hat{\beta}$.
+
+\subsection{Ridge regression}
+
+\section{Results}
+\section{Conclussion}
+
+\appendix
+\section{Appendix}
+\label{sect:appendix}
+Link to GitHub repository:\\
+
+\end{document}
