@@ -11,12 +11,12 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
 
 np.random.seed(777)
+path = "figures/"
 
 def plot3d(x, y, z, z2):
     """
     Function to make a 3d plot of the Franke function by using OLS.
     """
-    path = "figures/"
     
     fig = plt.figure()
     ax = fig.gca(projection="3d")
@@ -53,7 +53,6 @@ def plot_conf_int(N, hyperparam, method=""):
     from funcs import FrankeFunction, DesignMatrix, confidence_int, OLS, Ridge, Lasso
     
     fsize = 10 			# universal fontsize for plots
-    path = "figures/"
 
     x = np.sort(np.random.uniform(0, 1, N))
     y = np.sort(np.random.uniform(0, 1, N))
@@ -116,7 +115,7 @@ def fig_bias_var(x, y, p, method=""):
     functions of model complexity (p).
     """
     from funcs import FrankeFunction, k_fold_CV
-
+    
     Z = FrankeFunction(x, y)
     Zn = FrankeFunction(x, y) + 0.5*np.random.normal(0, 1, size=x.shape)
 
@@ -214,7 +213,7 @@ def fig_bias_var(x, y, p, method=""):
         plt.show()
 
     elif method == "Ridge":
-        lambda_Ridge = np.logspace(-7, 1, 80)
+        lambda_Ridge = np.logspace(-7, 1, 70)
         pred_error_ridge = np.zeros_like(lambda_Ridge)
         pred_error_train_ridge = np.zeros_like(pred_error_ridge)
         p_e_noise = np.zeros_like(pred_error_ridge)
@@ -230,7 +229,7 @@ def fig_bias_var(x, y, p, method=""):
             p_e_noise[j], p_e_t_noise[j] = k_fold_CV(x, y, Zn, folds=5, 
                                              dim=5, hyperparam=lamb, method="Ridge", train=True)
             # Calculate variance and Bias for test data
-            _, _, error_var[j], error_bias[j] = k_fold_CV(x, y, Z, folds=5, 
+            _, _, error_var[j], error_bias[j] = k_fold_CV(x, y, Zn, folds=5, 
                                                   dim=5, hyperparam=lamb, 
                                                   method="Ridge", train=False)
 
@@ -257,8 +256,7 @@ def fig_bias_var(x, y, p, method=""):
                 transform=ax.transAxes)
         ax.legend(loc=9)
         fig.tight_layout()
-        fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke.png", dpi=1000)
-        plt.show()
+        #fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke.png", dpi=1000)
         
         # Plot for FrankeFunction with noise
         pred_log = np.log10(p_e_noise)
@@ -281,29 +279,27 @@ def fig_bias_var(x, y, p, method=""):
                 horizontalalignment="right",
                 verticalalignment="baseline",
                 transform=ax.transAxes)
-    
         ax.legend(loc=9)
         fig.tight_layout()
-        fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke_noise.png", dpi=1000)
-        plt.show()
+        #fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke_noise.png", dpi=1000)
     
         # Plot for Variance of test data
         plt.figure()
         plt.title("Variance of the test data with "+str(method))
         plt.plot(np.log10(lambda_Ridge), error_var)
         plt.xlabel(r"log$_{10}\lambda$")
-        plt.savefig("figures/biasvar_Var_"+str(method)+".png", dpi=1000)
+        #plt.savefig("figures/biasvar_Var_"+str(method)+".png", dpi=1000)
     
         # Plot for Bias of test data
         plt.figure()
         plt.title("Bias of the test data with "+str(method))
         plt.plot(np.log10(lambda_Ridge), error_bias)
         plt.xlabel(r"log$_{10}\lambda$")
-        plt.savefig("figures/biasvar_Bias_"+str(method)+".png", dpi=1000)
+        #plt.savefig("figures/biasvar_Bias_"+str(method)+".png", dpi=1000)
         plt.show()
     
     elif method == "Lasso":
-        lambda_Lasso = np.logspace(-9, 1, 80)
+        lambda_Lasso = np.logspace(-10, -1, 70)
         pred_error = np.zeros_like(lambda_Lasso)
         pred_error_train = np.zeros_like(pred_error)
         p_e_noise = np.zeros_like(pred_error)
@@ -321,7 +317,7 @@ def fig_bias_var(x, y, p, method=""):
                                              dim=5, hyperparam=lamb, 
                                              method="Lasso", train=True)
             # Calculate variance and Bias for test data
-            _, _, error_var[j], error_bias[j] = k_fold_CV(x, y, Z, folds=5, 
+            _, _, error_var[j], error_bias[j] = k_fold_CV(x, y, Zn, folds=5, 
                                                    dim=5, hyperparam=lamb, 
                                                    method="Lasso", train=False)
 
@@ -348,7 +344,7 @@ def fig_bias_var(x, y, p, method=""):
                 transform=ax.transAxes)
         ax.legend(loc=9)
         fig.tight_layout()
-        #fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke.png", dpi=1000)
+        fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke.png", dpi=1000)
         plt.show()
         
         # Plot for FrankeFunction with noise
@@ -375,7 +371,7 @@ def fig_bias_var(x, y, p, method=""):
     
         ax.legend(loc=9)
         fig.tight_layout()
-        #fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke_noise.png", dpi=1000)
+        fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke_noise.png", dpi=1000)
         plt.show()
     
         # Plot for Variance of test data
@@ -384,7 +380,7 @@ def fig_bias_var(x, y, p, method=""):
         plt.plot(np.log10(lambda_Lasso), error_var)
         plt.xlabel(r"log$_{10}\lambda$")
         fig.tight_layout()
-        #plt.savefig("figures/biasvar_Var_"+str(method)+".png", dpi=1000)
+        plt.savefig("figures/biasvar_Var_"+str(method)+".png", dpi=1000)
     
         # Plot for Bias of test data
         plt.figure()
@@ -392,8 +388,32 @@ def fig_bias_var(x, y, p, method=""):
         plt.plot(np.log10(lambda_Lasso), error_bias)
         plt.xlabel(r"log$_{10}\lambda$")
         fig.tight_layout()
-        #plt.savefig("figures/biasvar_Bias_"+str(method)+".png", dpi=1000)
+        plt.savefig(path+"biasvar_Bias_"+str(method)+".png", dpi=1000)
         plt.show()
+
+def seaborn_heatmap(R2, lambda_params, dim_params, noise="", method=""):
+    """Make heatmap for the R2 score function for the methods"""
+    sns.set()
+
+    if noise == "No":
+        fig, ax = plt.subplots(figsize = (10, 10))
+        sns.heatmap(R2, vmin=-1, vmax=1, annot=True, ax=ax, cmap="viridis",
+                xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
+        ax.set_title("R2-score")
+        ax.set_ylabel("Model complexity")
+        ax.set_xlabel("$\lambda$")
+        fig.savefig(path+"R2_score_without_noise_heatmap_"+str(method)+".png")
+
+    elif noise == "Yes":
+        fig, ax = plt.subplots(figsize = (10, 10))
+        sns.heatmap(R2, vmin=-1, vmax=1, annot=True, ax=ax, cmap="viridis",
+                xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
+        ax.set_title("R2-score with noise")
+        ax.set_ylabel("Model complexity")
+        ax.set_xlabel("$\lambda$")
+        fig.savefig(path+"R2_score_with_noise_heatmap_"+str(method)+".png")
+    
+    plt.show()
 
 def terrain():
     """

@@ -59,6 +59,7 @@ def TrainData(M, v, test=0.25):
 
 def OLS(X, data):
     """Ordinary least squared using singular value decomposition (SVD)"""
+    X = np.copy(X)
     U, s, VT = scl.svd(X)
     D = scl.diagsvd(s, U.shape[0], VT.shape[0])
     beta = VT.T @ scl.pinv(D) @ U.T @ data
@@ -71,14 +72,15 @@ def Ridge(X, data, hyperparam):
     #sigma[:len(s), :len(s)] = np.diag(s)
     #inverse = scipy.linalg.inv(sigma.T.dot(sigma) + hyperparam*np.identity(len(s)))
     #beta = V.T.dot(inverse).dot(sigma.T).dot(U.T).dot(data)
+    X = np.copy(X)
     beta = OLS(X, data)/(1 + hyperparam)
     return beta
     
 def Lasso(X, data, hyperparam):
     """Lasso regression"""
-    clf = skl.Lasso(alpha=hyperparam, max_iter=1e6, tol=0.1, fit_intercept=False).fit(X, data)
+    clf = skl.Lasso(alpha=hyperparam, max_iter=2e5, tol=0.1, copy_X=True, precompute=True).fit(X, data)  #precompute=True
     beta = clf.coef_
-    #beta[0] = clf.intercept_
+    beta[0] = clf.intercept_
     return beta
 
 def confidence_int(x, y, z, hyperparam, method=""):
@@ -138,8 +140,7 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
             beta = Ridge(X_train, Z_train, hyperparam)
         elif method == "Lasso":
             beta = Lasso(X_train, Z_train, hyperparam)
-        
-        
+
         z_fit = X_test @ beta
         Mse[i] = MSE(Z_test, z_fit)
         if train is True:
@@ -148,6 +149,7 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
         R2[i] = R2score(Z_test, z_fit)
         Var[i] = VAR(z_fit)
         Bias[i] = BIAS(Z_test, z_fit)
+
     if train is True:
         return np.mean(Mse), np.mean(Mse_train)
     else:
