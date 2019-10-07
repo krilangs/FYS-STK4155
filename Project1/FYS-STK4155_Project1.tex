@@ -38,12 +38,12 @@ prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,show
 \newcommand{\VEV}[1]{\langle#1\rangle}
 \title{FYS-STK 4155 Project 1}
 \date{}
-\author{ Kristoffer Langstad\\ \textit{krilangs@uio.no}}
+\author{ Kristoffer Langstad \footnote{\url{https://github.com/krilangs/FYS-STK4155}}\\ \textit{krilangs@uio.no}}
 
 \begin{document}%layout
 \maketitle
 \begin{abstract}
-	
+In this project, we want to analyze different linear regression models on two different given data sets.  First we will analyze what is called the Franke function with an added stochastic noise following a normal distribution, and then we will analyze real digital terrain data. The Franke function only contains about 400 data points, while the full digital terrain data contains about 6.5million data points. Our computer can't handle such big data sets, so we have to reduce it to be able to analyze the data set. To analyze these data sets, we will use three different regression models; the Ordinary Least Squares (OLS) method, Ridge regression and Lasso regression. We will fit these models to the mentioned data sets as polynomials of varying degree. These regression methods are then combined with with the k-fold cross-validation resampling method for splitting the data set into a training set and a test set. Then we can evaluate the errors and the evaluation scores to see how well fitted our models are to the data sets depending on the model complexity and hyperparameters. We will also look at the bias-variance tradeoff we get as the complexity increases. From theory we could expect that the OLS would be the best fit model. This arises from the fact that Ridge and Lasso have a shrinking parameter, $\lambda$, that pushes the regression parameters, $\beta$, towards zero. As $\lambda$ gets closer to zero, we would expect the solutions to go towards the same as for the OLS model. From our results on the Franke function with a noise term with standard deviation $\sigma=0.2$, we can conclude that this happens. We get the smallest Mean Squared Error (MSE) and the best $R^2$ score from the OLS method for dimension 9 with $MSE=0.040959$ and $R^2=0.680520$. The results for Ridge and Lasso are close to the OLS results for very low $\lambda$'s ($\approx 10^{-7}$) with the same dimensionality.
 \end{abstract}
 
 \section{Introduction}
@@ -177,7 +177,7 @@ The last term $\sigma^2$ is the irreducible error of a normally distributed nois
 Here we can see that if the variance is decreased then the bias is increased, and the opposite for increased bias. For increasing complexity/degree of polynomial, we would expect the variance to increase and the bias decrease. This is the bias-variance tradeoff. The bias of the model can be seen as the measure of the tendency the model has to either overestimate or underestimate the predictions. When we have many $\beta$ parameters then we may get something called overfitting. This is when we get too high variance/low bias of the model. This comes from that the model may start to fit the noise as well a the training data. One precaution is to split the data into training and test data. This is to avoid the noise being take with the test data. Another method is to add a term to reduce the variance even though that will increase the bias. Often the increase in the bias is so small, such that the tradeoff we get is acceptable. On the other end we can have underfitting for high bias and low variance. This happens when the complexity is very small so that the model can't pick up features of the data set.
 
 \subsection{Resampling}
-We don't always have enough data to be able to fit our model. To solve this problem we can use resampling of the data. A way to split our data set is to use cross-validation techniques like the k-fold cross-validation resampling. This splits the data set into training and test data. The main idea of resampling techniques is to gain more data by drawing arbitrary samples from the training and refitting a model on each sample set. These new sets can then be evaluated to see how well they correspond to each other. The k-fold splits the data into $k$ sets/folds of data. Normally this is between 5 and 10 folds, while normally we split the data into 70-80\% training data and the remaining test data. One of the folds is set as a validation set, while the $k-1$ other folds are trained on our model for given hyperparameters. Then we test our model on the validation set. This is repeated until all the folds have been validated. Then we calculate the mean of the MSE for each iteration from the test data. This is then used as the expected prediction error. We can also calculate the $R^2$ score, variance and bias.
+We don't always have enough data to be able to fit our model. To solve this problem we can use resampling of the data. A way to split our data set is to use cross-validation techniques like the k-fold cross-validation resampling. This splits the data set into training and test data. The main idea of resampling techniques is to gain more data by drawing arbitrary samples from the training data and refitting a model on each sample set. These new sets can then be evaluated to see how well they correspond to each other. The k-fold splits the data into $k$ sets/folds of data. Normally this is between 5 and 10 folds, while normally we split the data into 70-80\% training data and the remaining test data. One of the folds is set as a validation (test) set, while the $k-1$ other folds are trained on our model for given hyperparameters. Then we test our fitted training model on the validation set. Then we calculate the evaluation score for each iteration from the test data. This is then used as the expected prediction error. This procedure is repeated until all the folds have been validated.
 
 \subsection{Data}
 The first data set in this project is the data we get from fitting polynomials to the two-dimensional Franke function:
@@ -193,7 +193,7 @@ The second set is (real) digital terrain data that we download from the
 U.S. Geological Survey EarthExplorer website \cite{earthexplorer}. The chosen digital terrain data we use is of Hardangervidda in Norway.
 
 \section{Methods}
-For us to study the three regression methods, we start by looking at Franke's function in equation \ref{eq:Franke_func} with the added stochastic noise. This data with added noise will act more as real data, since real data is most likely not as smooth as the original Franke function. We choose a noise with standard deviation $\sigma=1$ to test the error functions. For this noise we would expect poor results since the noise is of the same order as the data. After this test we choose $\sigma=0.2$ in the rest of the project. With this functions we can study how well the regression methods fit for the data we get from the function. First we fit the OLS regression method to the data. Equation \ref{eq:beta_SVD_OLS} is solved in Python using NumPy. We construct first a matrix with degree of polynomial 5 and with $N=50$ number of data points. With this matrix we calculate the optimal $\beta$ values using the SVD method. Then we use these regression parameters to calculate the variance (eq.\ref{eq:var_ols}), MSE (eq.\ref{eq:MSE}), the $R^2$ score (eq. \ref{eq:R2_score}) and bias (eq. \ref{eq:Bias}). Now we can calculate the confidence interval of the regression parameters of the OLS. There we use the Franke function with and without the noise to see the reliability of the OLS method on the Franke function, and plot for the 98\% confidence interval case. Then we apply the k-fold cross-validation method on the OLS method to perform a resampling. We will use 5 folds in the k-fold resampling. We these resampled data, we again calculate the error measurements and compare for the Franke function with and without noise. Next, we use the k-fold to calculate the bias-variance tradeoff (basically the same as the last calculation). Now we will plot the error measurements as the figure in \citet{hastie2009} (Fig. 2.11) for the training and test data. In that figure we don't see how the variance and bias change with increasing complexity. So we also plot the variance and bias separately for the test data. From the OLS analysis we can come up with an optimal matrix dimension that fits the model to the data best.
+For us to study the three regression methods, we start by looking at Franke's function in equation \ref{eq:Franke_func} with the added stochastic noise. This data with added noise will act more as real data, since real data is most likely not as smooth as the original Franke function. We choose a noise with standard deviation $\sigma=1$ to test the error functions. For this noise we would expect poor results since the noise is of the same order as the data. After this test we choose $\sigma=0.2$ in the rest of the project. With this functions we can study how well the regression methods fit for the data we get from the function. First we fit the OLS regression method to the data. Equation \ref{eq:beta_SVD_OLS} is solved in Python using NumPy. We construct first a matrix with degree of polynomial 5 and with $N=50$ number of data points. With this matrix we calculate the optimal $\beta$ values using the SVD method. Then we use these regression parameters to calculate the variance (eq.\ref{eq:var_ols}), MSE (eq.\ref{eq:MSE}), the $R^2$ score (eq.\ref{eq:R2_score}) and bias (eq.\ref{eq:Bias}). Now we can calculate the confidence interval of the regression parameters of the OLS. There we use the Franke function with and without the noise to see the reliability of the OLS method on the Franke function, and plot for the 98\% confidence interval case. Then we apply the k-fold cross-validation method on the OLS method to perform a resampling. We will use 5 folds in the k-fold resampling. We these resampled data, we again calculate the error measurements and compare for the Franke function with and without noise. Next, we use the k-fold to calculate the bias-variance tradeoff (basically the same as the last calculation). Now we will plot the error measurements as the figure in \citet{hastie2009} (Fig. 2.11) for the training and test data. In that figure we don't see how the variance and bias change with increasing complexity. So we also plot the variance and bias separately for the test data. From the OLS analysis we can come up with an optimal matrix dimension that fits the model to the data best.
 
 Next up is to do the same analysis for the Ridge and Lasso regression as we did for the the OLS. Since the Ridge and Lasso are dependent on a hyperparameter $\lambda$, we have to run through and test for the best hyperparameter as well. For the Ridge method we solve equation \ref{eq:beta_opt_ridge} again using NumPy. For the Lasso we have to use SciKit-Learns's built in function to solve equation \ref{eq:beta_opt_Lasso}. Since we now have to dependency-parameters, we choose to make a heatmap using the python function seaborn. With this function we look at the $R^2$ score function, which gives us how well fitted the model is, using the different combination of dimensions and hyperparameters. Using this heatmap we can conclude best fit parameters for the two regression methods.
 
@@ -202,7 +202,72 @@ Now with the best fit parameters for all the three regression methods, we can co
 With the analysis of the Franke function completed, we can analyze real terrain data using the three regression models. The terrain data we are analyzing are of an area of Hardangervidda in Norway \cite{earthexplorer}. The data set is a two-dimensional data set which contain almost 6.5 million data points. Our computer cannot analyze the full data set, since this requires to much memory usage. So we will only use every 20th data point in both directions, giving us about 16.5 thousand data points to analyze. For the k-fold cross-validation we change the implementation a little and use to more suit the terrain data, and choose 75\% as training data and 25\% as test data. Then we use the three regression models on the reduced terrain data to see which model fits the terrain data the best.
 
 \section{Results}
-\section{Conclussion}
+\subsection{Franke's function}
+For the Franke function we started by having a stochastic noise with standard deviation $\sigma=1$. The results of this can be seen in Table \ref{tab:high_noise}. There we see that the MSE is high and the $R^2$ score is low. This is as we suspected in the method section, poor results. Again, this raises from that the noise if of the same order as the data set from the Franke function. We get this results for all three regression methods. The reason is that the models will try to fit a polynomial to the stochastic noise. So for this order of noise, we conclude that none of the regression methods are sufficient for modeling this situation. That is why we choose a much lower standard deviation as $\sigma=0.2$ through the rest of the project with Franke's function. In Table \ref{tab:low_noise} we see that with lower standard deviation in the noise, we get much better results for all the three regression models.
+
+\begin{table}[h!]
+	\centering
+	%\hspace{-1cm}
+	\begin{tabular}{ |c|c|c|c| }
+		\hline \rule{0pt}{13pt}
+		 & Without noise & With $\sigma=1$ & With $\sigma=0.2$ \\
+		\hline \rule{0pt}{13pt}
+		MSE & 0.002136 & 1.038669 & 0.043992 \\
+		\hline \rule{0pt}{13pt}
+		$R^2$ score & 0.974316 & 0.092237 & 0.084214 \\
+		\hline
+	\end{tabular}	
+	\caption{Table for the MSE and $R^2$ score of the Franke function for complexity 5. For the Franke function without noise we see that the MSE is low and that the $R^2$ score is close to 1. With increasing standard deviation $\sigma$ we see that the values are getting more bad. For $\sigma=1$ the noise is so high that the results we would get wouldn't give anything useful. That is why we use $\sigma=0.2$ for the rest of the Franke's function analysis.}
+	\label{tab:high_noise}
+\end{table}
+
+\begin{table}[h!]
+	\centering
+	%\hspace{-1cm}
+	\begin{tabular}{ |c|c|c| }
+		\hline \rule{0pt}{13pt}
+		Model& MSE & $R^2$ score \\
+		\hline \rule{0pt}{13pt}
+		OLS & 0.043992 & 0.656863 \\
+		\hline \rule{0pt}{13pt}
+		Ridge & 0.043993 & 0.656861 \\
+		\hline \rule{0pt}{13pt}
+		Lasso & 0.067861 & 0.470688 \\
+		\hline
+	\end{tabular}	
+	\caption{This is a table for the MSE and the $R^2$ score with complexity 5, hyperparameter $10^{-3}$ and stochastic noise $\sigma=0.2$ for the three regression methods. Now we see that the values are much better than for in Table \ref{tab:high_noise} for high noise.}
+	\label{tab:low_noise}
+\end{table}
+
+For the OLS regression of the Franke function we calculate the confidence intervals of the regression parameters $\beta$. This is seen in Figure \ref{fig:conf_int_OLS}, and there we can see that the confidence intervals with noise can vary from being small to be a lot bigger than without the noise. For the confidence intervals of Ridge and Lasso, we look at their dependence of the hyperparameter $\lambda$ as well a the complexity. These plots can be seen in the GitHub repository \ref{sect:appendix}. The plots behave in a similar way like Figure \ref{fig:conf_int_OLS} for the OLS. For the Lasso method in Figure \ref{fig:conf_int_Lasso} for hyperparameter $\lambda=10^{-7}$, we see that the blue dots will be more or less on zero. This is most likely because of the way that Lasso pushes the regression parameters to zero, while Ridge only pushes them towards zero.
+
+\begin{figure}[htbp]
+	\centering\includegraphics[width=0.6\linewidth]{confIntBeta_OLS.png}
+	\caption{This is a plot of the 98\% confidence intervals of the regression parameters $\beta$ for the OLS model. The blue dots/lines indicate the confidence intervals for the Franke function without noise, while the red indicates the confidence intervals with noise ($\sigma=0.2$). As we see even with a small noise added, the confidence intervals can be quite large. By following the link in Appendix \ref{sect:appendix} to GitHub, we can see a plot for the confidence intervals for $\sigma=1$, and they are much much bigger than what we got here.\label{fig:conf_int_OLS}}
+\end{figure} 
+
+\begin{figure}[htbp]
+	\centering\includegraphics[width=0.6\linewidth]{confIntBeta_Lasso_1e-07.png}
+	\caption{This is a plot of the 98\% confidence intervals of the regression parameters $\beta$ for the Lasso model with $\lambda=10^{-7}$. Here we see the blue for the Franke function without noise laying more ore less on zero, while the red noise is a little more scattered above and belove zero.\label{fig:conf_int_Lasso}}
+\end{figure} 
+
+Now we look at the results we get when we introduce the k-fold cross-validation resampling on the regression methods. In figure \ref{fig:biasvar_OLS} we see the bias-variance tradeoff for the OLS model with resampling for 5 folds.
+
+\begin{figure}[htbp]
+	\centering\includegraphics[width=0.6\linewidth]{biasvariancetradeoff_OLS_Franke_noise.png}
+	\caption{In this figure we see the bias-variance tradeoff for increasing model complexity for the prediction error (MSE) for training and test data of the Franke function with noise.This is for the OLS model with k-fold cross-validation resampling with 5 folds. When the model complexity is getting higher, around 8-9, we see that the test curve starts to increase more. This comes from overfitting. In this figure we have included the regions of the variance and the bias as well, but these can be individually seen in Figure \ref{fig:var_bias}.\label{fig:biasvar_OLS}}
+\end{figure} 
+
+\begin{figure}[htbp]
+	%\hspace*{-2.5cm}
+	\subfloat[Plot of the variance of the data with OLS and resampling ]{\includegraphics[width=0.5\linewidth]{biasvar_Var_OLS.png}}
+	\subfloat[Plot of the bias of the data with OLS and resampling ]{\includegraphics[width=0.5\linewidth]{biasvar_Bias_OLS.png}}
+	\caption{Here we see how the variance and bias behave for increasing model complexity for the Franke function with the OLS model and resampling. As expected for the OLS model, the variance increases with the model complexity, while the bias (somewhat) decreases. This is the core of bias-variance tradeoff where they are dependent on each other, so if one increases then the other decreases. We also see that there is a much higher change in the variance than in the bias.\label{fig:var_bias}}
+\end{figure}
+
+
+\subsection{Digital data}
+\section{Conclusion}
 
 \appendix
 \section{Appendix}
