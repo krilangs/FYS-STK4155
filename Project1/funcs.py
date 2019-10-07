@@ -85,7 +85,7 @@ def Ridge(X, data, hyperparam):
     
 def Lasso(X, data, hyperparam):
     """Lasso regression"""
-    clf = skl.Lasso(alpha=hyperparam, max_iter=2e5, tol=0.1, copy_X=True, precompute=True).fit(X, data)  #precompute=True
+    clf = skl.Lasso(alpha=hyperparam, max_iter=2e5, tol=0.1, copy_X=True, precompute=True).fit(X, data)
     beta = clf.coef_
     beta[0] = clf.intercept_
     return beta
