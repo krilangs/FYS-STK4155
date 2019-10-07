@@ -1,25 +1,10 @@
 import numpy as np
-from sklearn.model_selection import train_test_split
 import funcs as fun
 from plots import plot3d, plot_conf_int, fig_bias_var, seaborn_heatmap
-
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.utils.testing import ignore_warnings
 np.random.seed(777)
-"""
-N = 40
-n = 5
 
-x = np.sort(np.random.uniform(0, 1, N))
-y = np.sort(np.random.uniform(0, 1, N))
-
-X, Y = np.meshgrid(x, y)
-noise = 0.8*np.random.normal(0, 1, size=X.shape)
-Z = fun.FrankeFunction(X, Y)
-z = np.ravel(Z)
-Zn = fun.FrankeFunction(X, Y) + noise
-zn = np.ravel(Zn)
-
-M = fun.DesignMatrix(X, Y, n)
-"""
 #------------------------------------------------
 def ex_a(N, n):
     """OLS on Franke function"""
@@ -28,11 +13,10 @@ def ex_a(N, n):
     y = np.sort(np.random.uniform(0, 1, N))
 
     X, Y = np.meshgrid(x, y)
-    noise = 0.8*np.random.normal(0, 1, size=X.shape)
+    noise = 0.2*np.random.normal(0, 1, size=X.shape)
     Z = fun.FrankeFunction(X, Y)
     z = np.ravel(Z)
     Zn = fun.FrankeFunction(X, Y) + noise
-
     M = fun.DesignMatrix(X, Y, n)
 
     beta_OLS = fun.OLS(M, z)
@@ -42,13 +26,13 @@ def ex_a(N, n):
     var_OLS = fun.VAR(y_tilde)
     Bias_OLS = fun.BIAS(Z, y_tilde)
 
-    print("MSE = %.10f" %mse_OLS)
-    print("R2-score = %.10f" %r2score_OLS)
-    print("Variance = %.10f" %var_OLS)
-    print("Bias = %.10f" %Bias_OLS)
+    print("MSE = %.6f" %mse_OLS)
+    print("R2-score = %.6f" %r2score_OLS)
+    print("Variance = %.6f" %var_OLS)
+    print("Bias = %.6f" %Bias_OLS)
 
-    #plot_conf_int(N=100, hyperparam=1, method="OLS")
-    #plot3d(X, Y, Z, Zn)
+    #plot_conf_int(N, hyperparam=1, method="OLS")
+    #plot3d(X, Y, Z, Zn, method=None)
 
 #------------------------------------------------
 
@@ -59,7 +43,7 @@ def ex_b(N, n):
     y = np.sort(np.random.uniform(0, 1, N))
 
     X, Y = np.meshgrid(x, y)
-    noise = 0.8*np.random.normal(0, 1, size=X.shape)
+    noise = 0.2*np.random.normal(0, 1, size=X.shape)
     Z = fun.FrankeFunction(X, Y)
     Zn = fun.FrankeFunction(X, Y) + noise
     
@@ -67,8 +51,8 @@ def ex_b(N, n):
     A = np.zeros((9, len(dim_params)))
 
     for i, dims in enumerate(dim_params):
-        Mse, R2, Var, Bias = fun.k_fold_CV(X, Y, Z, folds=5, dim=n, hyperparam=1, method="OLS", train=False)
-        Mse_n, R2_n, Var_n, Bias_n = fun.k_fold_CV(X, Y, Zn, folds=5, dim=n, hyperparam=1, method="OLS", train=False)
+        Mse, R2, Var, Bias = fun.k_fold_CV_franke(X, Y, Z, folds=5, dim=dims, hyperparam=1, method="OLS", train=False)
+        Mse_n, R2_n, Var_n, Bias_n = fun.k_fold_CV_franke(X, Y, Zn, folds=5, dim=dims, hyperparam=1, method="OLS", train=False)
         A[:,i] = dims, Mse, Mse_n, R2, R2_n, Var, Var_n, Bias, Bias_n
         print("Franke function without noise:")
         print("MSE k-fold = %.10f" %Mse)
@@ -81,7 +65,7 @@ def ex_b(N, n):
         print("Variance k-fold = %.10f" %Var_n)
         print("Bias k-fold = %.10f" %Bias_n)
     
-    #fun.make_tab(A, task="ex_b_OLS", string="6f")    
+    fun.make_tab(A, task="ex_b_OLS", string="6f")    
 
 #------------------------------------------------
 
@@ -103,7 +87,7 @@ def ex_d(N, n):
     y = np.sort(np.random.uniform(0, 1, N))
 
     X, Y = np.meshgrid(x, y)
-    noise = 0.8*np.random.normal(0, 1, size=X.shape)
+    noise = 0.2*np.random.normal(0, 1, size=X.shape)
     Z = fun.FrankeFunction(X, Y)
     z = np.ravel(Z)
     Zn = fun.FrankeFunction(X, Y) + noise
@@ -129,14 +113,14 @@ def ex_d(N, n):
     #fun.make_tab(A, task="ex_d_Ridge", string="5e") 
     
     # With resampling
-    lambda_params = [1e-1, 1e-3, 1e-5, 1e-7, 1e-10]
-    dim_params = [4, 5, 6, 7, 8, 9, 10]
-    #R2 = np.zeros((len(dim_params),(len(lambda_params))))
-    #R2_n = np.zeros_like(R2)
+    lambda_params = [ 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-10]
+    dim_params = [5, 6, 7, 8, 9, 10, 11]
+    R2 = np.zeros((len(dim_params),(len(lambda_params))))
+    R2_n = np.zeros_like(R2)
     #for i, dims in enumerate(dim_params):
-    #    for j, lambd in enumerate(lambda_params):        
-    #        Mse, R2[i][j], Var, Bias = fun.k_fold_CV(X, Y, Z, folds=5, dim=dims, hyperparam=lambd, method="Ridge", train=False)
-    #        Mse_n, R2_n[i][j], Var_n, Bias_n = fun.k_fold_CV(X, Y, Zn, folds=5, dim=dims, hyperparam=lambd, method="Ridge", train=False)
+        #for j, lambd in enumerate(lambda_params):        
+            #Mse, R2[i][j], Var, Bias = fun.k_fold_CV_franke(X, Y, Z, folds=5, dim=dims, hyperparam=lambd, method="Ridge", train=False)
+            #Mse_n, R2_n[i][j], Var_n, Bias_n = fun.k_fold_CV_franke(X, Y, Zn, folds=5, dim=dims, hyperparam=lambd, method="Ridge", train=False)
         
         
     # Test best dimension (n) and model complexity (lambda)
@@ -148,8 +132,8 @@ def ex_d(N, n):
     #for j, lambd in enumerate(lambda_params):
         #plot_conf_int(N, hyperparam=lambd, method="Ridge")
 
-        #Mse, R2, Var, Bias = fun.k_fold_CV(X, Y, Z, folds=5, dim=n, hyperparam=lambd, method="Ridge", train=False)
-        #Mse_n, R2_n, Var_n, Bias_n = fun.k_fold_CV(X, Y, Zn, folds=5, dim=n, hyperparam=lambd, method="Ridge", train=False)
+        #Mse, R2, Var, Bias = fun.k_fold_CV_franke(X, Y, Z, folds=5, dim=n, hyperparam=lambd, method="Ridge", train=False)
+        #Mse_n, R2_n, Var_n, Bias_n = fun.k_fold_CV_franke(X, Y, Zn, folds=5, dim=n, hyperparam=lambd, method="Ridge", train=False)
         #B[:,j] = lambd, Mse, Mse_n, R2, R2_n, Var, Var_n, Bias, Bias_n
 
         #print("Franke function without noise:")
@@ -171,6 +155,7 @@ def ex_d(N, n):
     
 #-------------------------------------------------------
 
+@ignore_warnings(category = ConvergenceWarning)
 def ex_e(N, n):
     """Lasso Regression"""
     print("e) Lasso analysis:")
@@ -178,7 +163,7 @@ def ex_e(N, n):
     y = np.sort(np.random.uniform(0, 1, N))
 
     X, Y = np.meshgrid(x, y)
-    noise = 0.8*np.random.normal(0, 1, size=X.shape)
+    noise = 0.2*np.random.normal(0, 1, size=X.shape)
     Z = fun.FrankeFunction(X, Y)
     z = np.ravel(Z)
     Zn = fun.FrankeFunction(X, Y) + noise
@@ -206,14 +191,14 @@ def ex_e(N, n):
     #fun.make_tab(A, task="ex_e_Lasso", string="5e") 
     
     # With resampling
-    lambda_params = [1e-1, 1e-3, 1e-5, 1e-7, 1e-10, 1e-12]
-    dim_params = [4, 5, 6, 7, 8, 9, 10]
-    #R2 = np.zeros((len(dim_params),(len(lambda_params))))
-    #R2_n = np.zeros_like(R2)
+    lambda_params = [1e-5, 1e-6, 1e-7, 1e-8, 1e-10, 1e-12]
+    dim_params = [5, 6, 7, 8, 9, 10, 12]
+    R2 = np.zeros((len(dim_params),(len(lambda_params))))
+    R2_n = np.zeros_like(R2)
     #for i, dims in enumerate(dim_params):
         #for j, lambd in enumerate(lambda_params):
-            #Mse, R2[i][j], Var, Bias = fun.k_fold_CV(X, Y, Z, folds=5, dim=dims, hyperparam=lambd, method="Lasso", train=False)
-            #Mse_n, R2_n[i][j], Var_n, Bias_n = fun.k_fold_CV(X, Y, Zn, folds=5, dim=dims, hyperparam=lambd, method="Lasso", train=False)
+            #Mse, R2[i][j], Var, Bias = fun.k_fold_CV_franke(X, Y, Z, folds=5, dim=dims, hyperparam=lambd, method="Lasso", train=False)
+            #Mse_n, R2_n[i][j], Var_n, Bias_n = fun.k_fold_CV_franke(X, Y, Zn, folds=5, dim=dims, hyperparam=lambd, method="Lasso", train=False)
 
     # Test best dimension (n) and model complexity (lambda)
     #seaborn_heatmap(R2, lambda_params, dim_params, noise="No", method="Lasso")
@@ -224,8 +209,8 @@ def ex_e(N, n):
     #for j, lambd in enumerate(lambda_params):
         #plot_conf_int(N, hyperparam=lambd, method="Lasso")
 
-        #Mse, R2, Var, Bias = fun.k_fold_CV(X, Y, Z, folds=5, dim=n, hyperparam=lambd, method="Lasso", train=False)
-        #Mse_n, R2_n, Var_n, Bias_n = fun.k_fold_CV(X, Y, Zn, folds=5, dim=n, hyperparam=lambd, method="Lasso", train=False)
+        #Mse, R2, Var, Bias = fun.k_fold_CV_franke(X, Y, Z, folds=5, dim=n, hyperparam=lambd, method="Lasso", train=False)
+        #Mse_n, R2_n, Var_n, Bias_n = fun.k_fold_CV_franke(X, Y, Zn, folds=5, dim=n, hyperparam=lambd, method="Lasso", train=False)
         #B[:,j] = lambd, Mse, Mse_n, R2, R2_n, Var, Var_n, Bias, Bias_n
         
         #print("Franke function without noise:")
@@ -244,12 +229,49 @@ def ex_e(N, n):
     #fun.make_tab(B, task="ex_e_kfold", string="5e")
     fig_bias_var(X, Y, p=12, method="Lasso")
 
+#-------------------------------------------------------
 
+@ignore_warnings(category = ConvergenceWarning)
+def best(N, n, hyperparam, method=""):
+    x = np.sort(np.random.uniform(0, 1, N))
+    y = np.sort(np.random.uniform(0, 1, N))
+
+    X, Y = np.meshgrid(x, y)
+    noise = 0.2*np.random.normal(0, 1, size=X.shape)
+    
+    Zn = fun.FrankeFunction(X, Y) + noise
+    z = np.ravel(Zn)
+    
+    M = fun.DesignMatrix(X, Y, n)
+    if method == "OLS":
+        beta = fun.OLS(M, z)
+    elif method == "Ridge":
+        beta = fun.Ridge(M, z, hyperparam)
+    elif method == "Lasso":
+        beta = fun.Lasso(M, z, hyperparam)
+        
+    y_tilde = M @ beta
+    mse = fun.MSE(Zn, y_tilde)
+    r2score = fun.R2score(Zn, y_tilde)
+    var = fun.VAR(y_tilde)
+    bias = fun.BIAS(Zn, y_tilde)
+    print("MSE = %.6f" %mse)
+    print("R2-score = %.6f" %r2score)
+    print("Variance = %.6f" %var)
+    print("Bias = %.6f" %bias)
+    if method == "OLS":
+        A = [n, mse, r2score, var, bias]
+    else:
+        A = [hyperparam, n, mse, r2score, var, bias]
+
+    fun.make_tab(A, task="best_"+str(method), string="6f")
+    plot3d(X, Y, Zn, y_tilde, method)
+    
 if __name__ == "__main__":
-    #ex_a(N=40, n=5)
-    #ex_b(N=40, n=5)
+    #ex_a(N=50, n=5)
+    #ex_b(N=50, n=5)
     #ex_c(N=50)
     #ex_d(N=50, n=5)
-    ex_e(N=40, n=4)
-
+    #ex_e(N=50, n=5)
+    #best(N=50, n=9, hyperparam=1e-7, method="Lasso")
     pass

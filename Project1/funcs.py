@@ -1,8 +1,8 @@
 import numpy as np
 import sklearn.linear_model as skl
-from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 import scipy.linalg as scl
+import time
 
 np.random.seed(777)
 
@@ -51,11 +51,18 @@ def BIAS(data, model):
     y_data = np.ravel(data)
     return np.mean((y_data - np.mean(y_model))**2)
 
-def TrainData(M, v, test=0.25):
+def TrainData(x, y, z, test=0.25):
     """Split data in training data and test data"""
-    z = np.ravel(v)
-    X_train, X_test, Z_train, Z_test = train_test_split(M, z, test_size=test, shuffle=True)
-    return X_train, X_test, Z_train, Z_test
+    N = len(x)
+    n = int(N*test)
+    
+    index = np.linspace(0,N-1,N)
+    np.random.shuffle(index)
+    test = np.logical_and(index >= 0, index < n)
+    train = test == False
+    test = x[test], y[test], z[test]
+    train = x[train], y[train], z[train]
+    return test, train
 
 def OLS(X, data):
     """Ordinary least squared using singular value decomposition (SVD)"""
@@ -108,8 +115,8 @@ def confidence_int(x, y, z, hyperparam, method=""):
     """
     return Z[1]*betaSTD
 
-def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
-    """k-fold cross-validation"""
+def k_fold_CV_franke(x, y, z, folds, dim, hyperparam, method="", train=False):
+    """k-fold cross-validation for Franke function"""
     Mse = np.zeros(folds)
     R2 = np.zeros(folds)
     Var = np.zeros(folds)
@@ -155,6 +162,46 @@ def k_fold_CV(x, y, z, folds, dim, hyperparam, method="", train=False):
     else:
         return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
 
+def k_fold_CV_terrain(x, y, z, folds, dim, hyperparam, method="", Train=False):
+    """k-fold cross-validation for terrain data"""
+    Mse = np.zeros(folds)
+    R2 = np.zeros(folds)
+    Var = np.zeros(folds)
+    Bias = np.zeros(folds)
+    if Train is True:
+        Mse_train = np.zeros(folds)
+    
+    test, train = TrainData(x, y, z, test=0.25)
+    xtest, ytest, ztest = test
+    xtrain, ytrain, ztrain = train
+    t0 = time.perf_counter()
+    for i in range(folds):
+        X_train = DesignMatrix(xtrain, ytrain, dim)
+        X_test = DesignMatrix(xtest, ytest, dim)
+        if method == "OLS":
+            beta = OLS(X_train, ztrain)
+        elif method == "Ridge":
+            beta = Ridge(X_train, ztrain, hyperparam)
+        elif method == "Lasso":
+            beta = Lasso(X_train, ztrain, hyperparam)
+
+        z_fit = X_test @ beta
+        Mse[i] = MSE(ztest, z_fit)
+        if Train is True:
+            z_train = X_train @ beta
+            Mse_train[i] = MSE(ztrain, z_train)
+        R2[i] = R2score(ztest, z_fit)
+        Var[i] = VAR(z_fit)
+        Bias[i] = BIAS(ztest, z_fit)
+    
+    t1 = time.perf_counter()
+    print("Time used = ", t1-t0)
+    if Train is True:
+        return np.mean(Mse), np.mean(Mse_train)
+    else:
+        return np.mean(Mse), np.mean(R2), np.mean(Var), np.mean(Bias)
+    
+    
 def make_tab(A, task="", string=""):
     """Save an array to a document for easier implementing into LaTeX"""
     np.savetxt("mydata_"+str(task)+".txt", A, delimiter=' & ', fmt="%."+str(string), newline=' \\\\\n')
