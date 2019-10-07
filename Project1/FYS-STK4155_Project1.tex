@@ -72,7 +72,7 @@ C(\hat{\beta})=\frac{1}{n}\sum_{i=0}^{n-1}(y_i-\tilde{y}_i)^2=\frac{1}{n}\sum_{i
 \[\min_{\hat{\beta}\in \mathcal{R}^p}C(\hat{\beta}).\] This should give us the optimal $\beta$ values as
 \begin{equation}
 \label{eq:beta_OLS_opt}
-\hat{\beta}_{\text{optimal}}=(\textbf{X}^T\textbf{X})^{-1}\textbf{X}^T\textbf{y}
+\hat{\beta}_{\text{optimal}}^{\text{OLS}}=(\textbf{X}^T\textbf{X})^{-1}\textbf{X}^T\textbf{y}
 \end{equation}
 These $\beta$ values are the model values in the OLS model.
 
@@ -81,7 +81,7 @@ Taking the inverse of a matrix product (\textbf{X}$^T$\textbf{X})$^{-1}$ may be 
 This is written in terms of the orthogonal transformation \textbf{U}, the diagonal matrix \textbf{D} containing the eigenvalues and \textbf{V}$^T$ which is also an orthogonal matrix. By inserting this into the OLS we get:
 \begin{equation}
 \label{eq:beta_SVD_OLS}
-\tilde{\textbf{y}}=\textbf{X}\hat{\beta}_{\text{optimal}}=\textbf{U}\textbf{U}^T\textbf{y}
+\tilde{\textbf{y}}=\textbf{X}\hat{\beta}_{\text{optimal}}^{\text{OLS}}=\textbf{U}\textbf{U}^T\textbf{y}
 \end{equation}
 This is now a more CPU friendly calculation of the OLS for finding the regression parameters $\hat{\beta}$.
 
@@ -95,7 +95,7 @@ The last term above is called the penalty term.
 Then to find the optimal $\beta$ values we again take the minimum of the cost function to get
 \begin{equation}
 \label{eq:beta_opt_ridge}
-\hat{\beta}_{\text{optimal}}=(\textbf{X}^T\textbf{X}+\lambda \textbf{I})^{-1}\textbf{X}^T\textbf{y},
+\hat{\beta}_{\text{optimal}}^{\text{Ridge}}=(\textbf{X}^T\textbf{X}+\lambda \textbf{I})^{-1}\textbf{X}^T\textbf{y},
 \end{equation}
 where \textbf{I} is the identity matrix with dimension $p\times p$ and $\lambda\geq0$. For orthonormal matrix (which we get when using the SVD in the OLS method) we get \textbf{X}$^T$\textbf{X}=\textbf{I} and
 \begin{equation*}
@@ -109,7 +109,12 @@ The Lasso method is similar to the Ridge method in that case it has a complexity
 \label{eq:cost_lasso}
 C(\hat{\beta})=\frac{1}{n}\sum_{i=0}^{n-1}(y_i-\textbf{x}_{i*}\hat{\beta})^2+\lambda\sum_{j=0}^{p-1}|\beta_j|
 \end{equation}
-A difference with the Lasso is that it uses methods like gradient descent to find the $\hat{\beta}$ that minimize the cost function. For the Lasso there is no explicit expression for the model parameters like for the OLS and Ridge methods. In this project we will just use Scikit-Learn's Lasso function, instead of making our own which can be difficult. Like the Ridge method the task is to make the $\beta$ values go to zero, but in a slightly different way. So the variance should decrease while the bias should increase with increasing $\lambda$ also here.
+A difference with the Lasso is that it uses methods like gradient descent to find the $\hat{\beta}$ that minimize the cost function. For the Lasso there is no explicit expression for the model parameters like for the OLS and Ridge methods. In this project we will just use Scikit-Learn's Lasso function, instead of making our own which can be difficult. The equation for the regression parameters is:
+\begin{equation}
+\label{eq:beta_opt_Lasso}
+\hat{\beta}_{\text{optimal}}^{\text{Lasso}}=\min_{\hat{\beta}\in \mathcal{R}^p}\left[\frac{1}{n}\sum_{i=0}^{n-1}(y_i-\textbf{x}_{i*}\hat{\beta})^2+\lambda\sum_{j=0}^{p-1}|\beta_j|\right]
+\end{equation} 
+Like the Ridge method the task is to make the $\beta$ values go to zero, but in a slightly different way. So the variance should decrease while the bias should increase with increasing $\lambda$ also here.
 
 \subsection{Confidence interval}
 For the confidence interval of the parameters $\beta$ we need to calculate the variance of the models. The variance of the OLS model can be calculated as
@@ -159,7 +164,7 @@ The full calculation can be found in appendix \ref{sect:bias_var_calc}.
 
 From the rewritten cost function we now have three terms in the equation above. The first term is the bias squared
 \begin{equation}
-\label{eq_Bias}
+\label{eq:Bias}
 Bias=\frac{1}{n}\sum_{i=0}^{n-1}(f_i-\mathds{E}[\tilde{\textbf{y}}])^2.
 \end{equation}
 The second term is the variance of the model
@@ -188,11 +193,13 @@ The second set is (real) digital terrain data that we download from the
 U.S. Geological Survey EarthExplorer website \cite{earthexplorer}. The chosen digital terrain data we use is of Hardangervidda in Norway.
 
 \section{Methods}
+For us to study the three regression methods, we start by looking at Franke's function in equation \ref{eq:Franke_func} with the added stochastic noise. This data with added noise will act more as real data, since real data is most likely not as smooth as the original Franke function. We choose a noise with standard deviation $\sigma=1$ to test the error functions. For this noise we would expect poor results since the noise is of the same order as the data. After this test we choose $\sigma=0.2$ in the rest of the project. With this functions we can study how well the regression methods fit for the data we get from the function. First we fit the OLS regression method to the data. Equation \ref{eq:beta_SVD_OLS} is solved in Python using NumPy. We construct first a matrix with degree of polynomial 5 and with $N=50$ number of data points. With this matrix we calculate the optimal $\beta$ values using the SVD method. Then we use these regression parameters to calculate the variance (eq.\ref{eq:var_ols}), MSE (eq.\ref{eq:MSE}), the $R^2$ score (eq. \ref{eq:R2_score}) and bias (eq. \ref{eq:Bias}). Now we can calculate the confidence interval of the regression parameters of the OLS. There we use the Franke function with and without the noise to see the reliability of the OLS method on the Franke function, and plot for the 98\% confidence interval case. Then we apply the k-fold cross-validation method on the OLS method to perform a resampling. We will use 5 folds in the k-fold resampling. We these resampled data, we again calculate the error measurements and compare for the Franke function with and without noise. Next, we use the k-fold to calculate the bias-variance tradeoff (basically the same as the last calculation). Now we will plot the error measurements as the figure in \citet{hastie2009} (Fig. 2.11) for the training and test data. In that figure we don't see how the variance and bias change with increasing complexity. So we also plot the variance and bias separately for the test data. From the OLS analysis we can come up with an optimal matrix dimension that fits the model to the data best.
 
+Next up is to do the same analysis for the Ridge and Lasso regression as we did for the the OLS. Since the Ridge and Lasso are dependent on a hyperparameter $\lambda$, we have to run through and test for the best hyperparameter as well. For the Ridge method we solve equation \ref{eq:beta_opt_ridge} again using NumPy. For the Lasso we have to use SciKit-Learns's built in function to solve equation \ref{eq:beta_opt_Lasso}. Since we now have to dependency-parameters, we choose to make a heatmap using the python function seaborn. With this function we look at the $R^2$ score function, which gives us how well fitted the model is, using the different combination of dimensions and hyperparameters. Using this heatmap we can conclude best fit parameters for the two regression methods.
 
+Now with the best fit parameters for all the three regression methods, we can conclude which model fits the data the best.
 
-
-
+With the analysis of the Franke function completed, we can analyze real terrain data using the three regression models. The terrain data we are analyzing are of an area of Hardangervidda in Norway \cite{earthexplorer}. The data set is a two-dimensional data set which contain almost 6.5 million data points. Our computer cannot analyze the full data set, since this requires to much memory usage. So we will only use every 20th data point in both directions, giving us about 16.5 thousand data points to analyze. For the k-fold cross-validation we change the implementation a little and use to more suit the terrain data, and choose 75\% as training data and 25\% as test data. Then we use the three regression models on the reduced terrain data to see which model fits the terrain data the best.
 
 \section{Results}
 \section{Conclussion}
