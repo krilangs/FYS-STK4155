@@ -6,20 +6,20 @@ from mpl_toolkits.mplot3d import Axes3D
 from imageio import imread
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import seaborn as sns
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import seaborn as sns
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.testing import ignore_warnings
 
 np.random.seed(777)
-path = "figures/"
 
 def plot3d(X, Y, Z, z2, method=""):
     """
     Function to make a 3d plot of the Franke function from
     the regression methods.
     """
+    path = "figures/"
     if method == None:
         fig = plt.figure()
         ax = fig.gca(projection="3d")
@@ -36,7 +36,7 @@ def plot3d(X, Y, Z, z2, method=""):
         fig.colorbar(surf, shrink=0.5, aspect=5)
         fig.tight_layout()
         plt.savefig(path + "Franke_3Dplot" + ".png")
-        
+
         fig = plt.figure()
         ax = fig.gca(projection="3d")
         ax.text2D(0.05, 0.95, "3D plot of FrankeFunction with noise",
@@ -66,7 +66,7 @@ def plot3d(X, Y, Z, z2, method=""):
         surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False, alpha=0.4)
         ax.zaxis.set_major_locator(LinearLocator(10))
         ax.zaxis.set_major_formatter(FormatStrFormatter("%.02f"))
-        
+
         fig.colorbar(surf, shrink=0.5, aspect=5)
         ax.view_init(elev=20, azim=70)
         ax.set_ylabel("y")
@@ -74,9 +74,8 @@ def plot3d(X, Y, Z, z2, method=""):
         ax.set_zlabel("z")
         fig.tight_layout()
         plt.savefig(path + "3Dplot_best_" +str(method)+ ".png")
-
     plt.show()
-    
+
 def plot3d_terrain(X, Y, Z, z2, method=""):
     """
     Function to make a 3d plot of the digital terrain data.
@@ -84,28 +83,37 @@ def plot3d_terrain(X, Y, Z, z2, method=""):
     path = "terrain_figures/"
     fig = plt.figure()
     ax = fig.gca(projection="3d")
-        
+    ax.text2D(0.05, 0.95, "3D plot of the best fit "+str(method)+" model for terrain data",
+                  transform=ax.transAxes, size=16)
+
     x = np.ravel(X)
     y = np.ravel(Y)
 
-    ax.scatter(x[::10], y[::10], z2[::10], s=2, color="black")
+    ax.scatter(x[::5], y[::5], z2[::5], s=2, color="black")
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False, alpha=0.4)
     ax.zaxis.set_major_locator(LinearLocator(10))
     ax.zaxis.set_major_formatter(FormatStrFormatter("%.02f"))
-        
+
     fig.colorbar(surf, shrink=0.5, aspect=5)
+    ax.view_init(elev=30, azim=80)
+    ax.set_ylabel("y")
+    ax.set_xlabel("x")
+    ax.set_zlabel("z")
+    ax.minorticks_on()
+    ax.tick_params(axis='z', width=10, pad=10)
+    ax.zaxis.labelpad=20
     fig.tight_layout()
     plt.savefig(path+"3Dplot_terrain_" +str(method)+ ".png")
     plt.show()
 
-@ignore_warnings(category = ConvergenceWarning)
+@ignore_warnings(category=ConvergenceWarning)
 def plot_conf_int(N, hyperparam, method=""):
     """
     Function to plot the confidence interval of beta.
     """
     from funcs import FrankeFunction, DesignMatrix, confidence_int, OLS, Ridge, Lasso
-    
-    fsize = 10 			# universal fontsize for plots
+    path = "figures/"
+    fsize = 10 			# Universal fontsize for plots
 
     x = np.sort(np.random.uniform(0, 1, N))
     y = np.sort(np.random.uniform(0, 1, N))
@@ -131,14 +139,14 @@ def plot_conf_int(N, hyperparam, method=""):
         beta_f = Lasso(M, Z, hyperparam)
         betaSTD_z = confidence_int(x, y, Zn, hyperparam, method)
         beta_z = Lasso(M, Zn, hyperparam)
-        
+
     N = len(betaSTD_z)
 
-    colors = ["mediumblue","crimson"]
+    colors = ["mediumblue", "crimson"]
     plt.plot(-10, -1, color=colors[0], label="without noise")
     plt.plot(-10, -1, color=colors[1], label="with noise")
     plt.legend()
-    
+
     for i in range(N):
         plt.errorbar(i, beta_f[i], yerr=betaSTD_f[i], capsize=4, \
 			color=colors[0], marker='.', markersize=7, elinewidth=2,\
@@ -150,7 +158,8 @@ def plot_conf_int(N, hyperparam, method=""):
     plt.xticks(range(N), xticks, fontsize=fsize)
     plt.xlim(-1, N)
     if method == "Ridge" or method == "Lasso":
-        plt.title("Confidence interval of $\\beta$ for " + str(method) + " and $\\lambda$=" + str(hyperparam))
+        plt.title("Confidence interval of $\\beta$ for " + str(method)\
+                  + " and $\\lambda$=" + str(hyperparam))
     else:
         plt.title("Confidence interval of $\\beta$ for " + str(method))
     plt.tight_layout()
@@ -159,17 +168,16 @@ def plot_conf_int(N, hyperparam, method=""):
         plt.savefig(path + "confIntBeta_" + str(method) + "_" + str(hyperparam) + ".png")
     else:
         plt.savefig(path + "confIntBeta_" + str(method) + ".png")
-
     plt.show()
 
-@ignore_warnings(category = ConvergenceWarning)
+@ignore_warnings(category=ConvergenceWarning)
 def fig_bias_var(x, y, p, method=""):
     """
     Function to plot the test and training errors as
     functions of model complexity (p).
     """
     from funcs import FrankeFunction, k_fold_CV_franke
-    
+    path = "figures/"
     Z = FrankeFunction(x, y)
     Zn = FrankeFunction(x, y) + 0.2*np.random.normal(0, 1, size=x.shape)
 
@@ -180,20 +188,20 @@ def fig_bias_var(x, y, p, method=""):
         error_var = np.zeros_like(pred_error)
         error_bias = np.zeros_like(pred_error)
         pred_error_train = np.zeros_like(pred_error)
-        p_e_t_noise = np.zeros_like(pred_error) 
+        p_e_t_noise = np.zeros_like(pred_error)
         for j in complexity:
             print(j)
-            pred_error[j], pred_error_train[j] = k_fold_CV_franke(x, y, Z, folds=5, 
-                                                  dim=j, hyperparam=1, 
+            pred_error[j], pred_error_train[j] = k_fold_CV_franke(x, y, Z, folds=5,
+                                                  dim=j, hyperparam=1,
                                                   method="OLS", train=True)
-            p_e_noise[j], p_e_t_noise[j] = k_fold_CV_franke(x, y, Zn, folds=5, 
-                                             dim=j, hyperparam=1, 
+            p_e_noise[j], p_e_t_noise[j] = k_fold_CV_franke(x, y, Zn, folds=5,
+                                             dim=j, hyperparam=1,
                                              method="OLS", train=True)
             # Calculate variance and Bias for test data
-            _, _, error_var[j], error_bias[j] = k_fold_CV_franke(x, y, Zn, folds=5, 
-                                                   dim=j, hyperparam=1, 
+            _, _, error_var[j], error_bias[j] = k_fold_CV_franke(x, y, Zn, folds=5,
+                                                   dim=j, hyperparam=1,
                                                    method="OLS", train=False)
-        
+
         # Plot for FrankeFunction
         fig, ax = plt.subplots()
         plt.title("Bias-variance tradeoff train and test data\n "+str(method))
@@ -216,10 +224,10 @@ def fig_bias_var(x, y, p, method=""):
         ax.legend(loc=9)
         fig.tight_layout()
         fig.savefig("figures/biasvariancetradeoff_"+str(method)+"_Franke.png", dpi=1000)
-    
+
         # Plot for FrankeFunction with noise
         fig, ax = plt.subplots()
-        plt.title("Bias-variance tradeoff train and test data w/noise\n "+ str(method) )
+        plt.title("Bias-variance tradeoff train and test data w/noise\n "+ str(method))
         fig.set_size_inches(0.9 * 2 * 2.9, 0.9 * 2 * 1.81134774961)
         ax.plot(complexity, p_e_t_noise, label="Train", color="g")
         ax.plot(complexity, p_e_noise, linestyle="--", label="Test", color="r")
@@ -235,18 +243,18 @@ def fig_bias_var(x, y, p, method=""):
                 horizontalalignment="right",
                 verticalalignment="baseline",
                 transform=ax.transAxes)
-    
+
         ax.legend(loc=9)
         fig.tight_layout()
         fig.savefig(path+"biasvariancetradeoff_"+str(method)+"_Franke_noise.png", dpi=1000)
-    
+
         # Plot for Variance of test data
         plt.figure()
         plt.title("Variance of the test data with "+str(method))
         plt.plot(complexity, error_var)
         plt.xlabel("Model Complexity [polynomial degree]")
         plt.savefig(path+"biasvar_Var_"+str(method)+".png", dpi=1000)
-    
+
         # Plot for Bias of test data
         plt.figure()
         plt.title("Bias of the test data with "+str(method))
@@ -260,7 +268,7 @@ def fig_bias_var(x, y, p, method=""):
         pred_error_ridge = np.zeros_like(lambda_Ridge)
         pred_error_train_ridge = np.zeros_like(pred_error_ridge)
         p_e_noise = np.zeros_like(pred_error_ridge)
-        p_e_t_noise = np.zeros_like(pred_error_ridge)  
+        p_e_t_noise = np.zeros_like(pred_error_ridge)
         error_var = np.zeros_like(pred_error_ridge)
         error_bias = np.zeros_like(pred_error_ridge)
         dims = [5, 8, 10, 12]
@@ -268,13 +276,13 @@ def fig_bias_var(x, y, p, method=""):
             for j, lamb in enumerate(lambda_Ridge):
                 if j % 10 == 0:
                     print(j)
-                pred_error_ridge[j], pred_error_train_ridge[j] = k_fold_CV_franke(x, y, Z, folds=5, 
+                pred_error_ridge[j], pred_error_train_ridge[j] = k_fold_CV_franke(x, y, Z, folds=5,
                                                   dim=d, hyperparam=lamb, method="Ridge", train=True)
-                p_e_noise[j], p_e_t_noise[j] = k_fold_CV_franke(x, y, Zn, folds=5, 
+                p_e_noise[j], p_e_t_noise[j] = k_fold_CV_franke(x, y, Zn, folds=5,
                                              dim=d, hyperparam=lamb, method="Ridge", train=True)
             # Calculate variance and Bias for test data
-                _, _, error_var[j], error_bias[j] = k_fold_CV_franke(x, y, Zn, folds=5, 
-                                                  dim=d, hyperparam=lamb, 
+                _, _, error_var[j], error_bias[j] = k_fold_CV_franke(x, y, Zn, folds=5,
+                                                  dim=d, hyperparam=lamb,
                                                   method="Ridge", train=False)
 
             # Plot for FrankeFunction
@@ -289,7 +297,7 @@ def fig_bias_var(x, y, p, method=""):
             ax.set_ylabel(r"log$_{10}$(Prediction Error)")
             ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
                          np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
-    
+
             ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
                     horizontalalignment="left",
                     verticalalignment="baseline",
@@ -301,7 +309,7 @@ def fig_bias_var(x, y, p, method=""):
             ax.legend(loc=9)
             fig.tight_layout()
             fig.savefig(path+"biasvariancetradeoff_"+str(method)+"_dim_"+str(d)+"_Franke.png", dpi=1000)
-        
+
             # Plot for FrankeFunction with noise
             pred_log = np.log10(p_e_noise)
             pred_log_train = np.log10(p_e_t_noise)
@@ -326,14 +334,14 @@ def fig_bias_var(x, y, p, method=""):
             ax.legend(loc=9)
             fig.tight_layout()
             fig.savefig(path+"biasvariancetradeoff_"+str(method)+"_dim_"+str(d)+"_Franke_noise.png", dpi=1000)
-    
+
             # Plot for Variance of test data
             plt.figure()
             plt.title("Variance of the test data with "+str(method)+"\n and dim="+str(d))
             plt.plot(np.log10(lambda_Ridge), error_var)
             plt.xlabel(r"log$_{10}\lambda$")
             plt.savefig(path+"biasvar_Var_"+str(method)+"_dim_"+str(d)+".png", dpi=1000)
-            
+
             # Plot for Bias of test data
             plt.figure()
             plt.title("Bias of the test data with "+str(method)+"\n and dim="+str(d))
@@ -341,13 +349,13 @@ def fig_bias_var(x, y, p, method=""):
             plt.xlabel(r"log$_{10}\lambda$")
             plt.savefig(path+"biasvar_Bias_"+str(method)+"_dim_"+str(d)+".png", dpi=1000)
             plt.show()
-    
+
     elif method == "Lasso":
         lambda_Lasso = np.logspace(-10, -1, 50)
         pred_error = np.zeros_like(lambda_Lasso)
         pred_error_train = np.zeros_like(pred_error)
         p_e_noise = np.zeros_like(pred_error)
-        p_e_t_noise = np.zeros_like(pred_error)  
+        p_e_t_noise = np.zeros_like(pred_error)
         error_var = np.zeros_like(pred_error)
         error_bias = np.zeros_like(pred_error)
         dims = [5, 8, 10, 12]
@@ -355,15 +363,15 @@ def fig_bias_var(x, y, p, method=""):
             for j, lamb in enumerate(lambda_Lasso):
                 if j % 10 == 0:
                     print(j)
-                pred_error[j], pred_error_train[j] = k_fold_CV_franke(x, y, Z, folds=5, 
-                                                  dim=d, hyperparam=lamb, 
+                pred_error[j], pred_error_train[j] = k_fold_CV_franke(x, y, Z, folds=5,
+                                                  dim=d, hyperparam=lamb,
                                                   method="Lasso", train=True)
-                p_e_noise[j], p_e_t_noise[j] = k_fold_CV_franke(x, y, Zn, folds=5, 
-                                             dim=d, hyperparam=lamb, 
+                p_e_noise[j], p_e_t_noise[j] = k_fold_CV_franke(x, y, Zn, folds=5,
+                                             dim=d, hyperparam=lamb,
                                              method="Lasso", train=True)
                 # Calculate variance and Bias for test data
-                _, _, error_var[j], error_bias[j] = k_fold_CV_franke(x, y, Zn, folds=5, 
-                                                   dim=d, hyperparam=lamb, 
+                _, _, error_var[j], error_bias[j] = k_fold_CV_franke(x, y, Zn, folds=5,
+                                                   dim=d, hyperparam=lamb,
                                                    method="Lasso", train=False)
 
             # Plot for FrankeFunction
@@ -378,7 +386,7 @@ def fig_bias_var(x, y, p, method=""):
             ax.set_ylabel(r"log$_{10}$(Prediction Error)")
             ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
                          np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
-        
+
             ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
                     horizontalalignment="left",
                     verticalalignment="baseline",
@@ -390,7 +398,7 @@ def fig_bias_var(x, y, p, method=""):
             ax.legend(loc=9)
             fig.tight_layout()
             fig.savefig(path+"biasvariancetradeoff_"+str(method)+"_dim_"+str(d)+"_Franke.png", dpi=1000)
-            
+
             # Plot for FrankeFunction with noise
             pred_log = np.log10(p_e_noise)
             pred_log_train = np.log10(p_e_t_noise)
@@ -403,7 +411,7 @@ def fig_bias_var(x, y, p, method=""):
             ax.set_ylabel(r"log$_{10}$(Prediction Error)")
             ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
                          np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
-    
+
             ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
                     horizontalalignment="left",
                     verticalalignment="baseline",
@@ -412,11 +420,11 @@ def fig_bias_var(x, y, p, method=""):
                     horizontalalignment="right",
                     verticalalignment="baseline",
                     transform=ax.transAxes)
-            
+
             ax.legend(loc=9)
             fig.tight_layout()
             fig.savefig(path+"biasvariancetradeoff_"+str(method)+"_dim_"+str(d)+"_Franke_noise.png", dpi=1000)
-            
+
             # Plot for Variance of test data
             plt.figure()
             plt.title("Variance of the test data with "+str(method)+"\n and dim="+str(d))
@@ -424,7 +432,7 @@ def fig_bias_var(x, y, p, method=""):
             plt.xlabel(r"log$_{10}\lambda$")
             fig.tight_layout()
             plt.savefig(path+"biasvar_Var_"+str(method)+"_dim_"+str(d)+".png", dpi=1000)
-            
+
             # Plot for Bias of test data
             plt.figure()
             plt.title("Bias of the test data with "+str(method)+"\n and dim="+str(d))
@@ -439,18 +447,18 @@ def seaborn_heatmap(R2, lambda_params, dim_params, noise="", method=""):
     sns.set()
     path = "figures/"
     if noise == "No":
-        fig, ax = plt.subplots(figsize = (10, 10))
+        fig, ax = plt.subplots(figsize=(10, 10))
         sns.heatmap(R2, vmin=-1, vmax=1, annot=True, ax=ax, cmap="viridis",
-                xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
+                    xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
         ax.set_title("R2-score")
         ax.set_ylabel("Model complexity")
         ax.set_xlabel("$\lambda$")
         fig.savefig(path+"R2_score_without_noise_heatmap_"+str(method)+".png")
 
     elif noise == "Yes":
-        fig, ax = plt.subplots(figsize = (10, 10))
+        fig, ax = plt.subplots(figsize=(10, 10))
         sns.heatmap(R2, vmin=-1, vmax=1, annot=True, ax=ax, cmap="viridis",
-                xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
+                    xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
         ax.set_title("R2-score with noise")
         ax.set_ylabel("Model complexity")
         ax.set_xlabel("$\lambda$")
@@ -458,18 +466,17 @@ def seaborn_heatmap(R2, lambda_params, dim_params, noise="", method=""):
 
     elif noise == None:
         path = "terrain_figures/"
-        fig, ax = plt.subplots(figsize = (10, 10))
+        fig, ax = plt.subplots(figsize=(10, 10))
         sns.heatmap(R2, vmin=-1, vmax=1, annot=True, ax=ax, cmap="viridis",
-                xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
+                    xticklabels=lambda_params, yticklabels=dim_params, fmt=".3f")
         ax.set_title("R2-score for terrain data")
         ax.set_ylabel("Model complexity")
         ax.set_xlabel("$\lambda$")
         fig.savefig(path+"R2_score_terrain_heatmap_"+str(method)+".png")
-    
     plt.show()
 
-@ignore_warnings(category = ConvergenceWarning)
-def terrain_plot(x, y, z, p, plots=""):
+@ignore_warnings(category=ConvergenceWarning)
+def bias_var_terrain(x, y, z, p, plots=""):
     from funcs import k_fold_CV_terrain
     path = "terrain_figures/"
     """
@@ -486,50 +493,52 @@ def terrain_plot(x, y, z, p, plots=""):
         plt.xlabel("X")
         plt.ylabel("Y")
         plt.savefig(path+"2d_terrain.png")
-        
+
         # Show the terrain
         sns.set()
         sns.set_style("whitegrid")
         sns.set_palette("husl")
-    
+
         fig = plt.figure()
         ax = fig.gca(projection="3d")
-    
+
         #get the number of points
         n_y, n_x = np.shape(vidda)
-    
+
         #making an x and y grid
-        x_grid, y_grid = np.meshgrid(np.arange(n_x),np.arange(n_y))
-    
+        x_grid, y_grid = np.meshgrid(np.arange(n_x), np.arange(n_y))
+
         # Plot the surface.
         surf = ax.plot_surface(x_grid, y_grid, vidda, cmap=cm.coolwarm,
-                           linewidth=0, antialiased=False, alpha = 0.5)
+                               linewidth=0, antialiased=False, alpha=0.4)
         ax.view_init(azim=30)
         # Add a color bar which maps values to colors.
         fig.colorbar(surf, shrink=0.5, aspect=5)
         fig.savefig(path+"3d_terrain.png")
         plt.show()
-    
+
     elif plots == "OLS":
         """
         Function to plot the test and training errors as
         functions of model complexity (p).
         """
         complexity = np.arange(0, p+1)
-        pred_error = np.zeros_like(complexity, dtype=float)        
+        pred_error = np.zeros_like(complexity, dtype=float)
         error_var = np.zeros_like(pred_error)
-        error_bias = np.zeros_like(pred_error)    
+        error_bias = np.zeros_like(pred_error)
         pred_error_train = np.zeros_like(pred_error)
-        
+
         for j in complexity:
             print(j)
-            pred_error[j], pred_error_train[j] = k_fold_CV_terrain(x, y, z, folds=5, 
-                                                  dim=j, hyperparam=1, 
+            pred_error[j], pred_error_train[j] = k_fold_CV_terrain(x, y, z, folds=5,
+                                                  dim=j, hyperparam=1,
                                                   method="OLS", Train=True)
-        
+            # Calculate variance and Bias for test data
+            _, _, error_var[j], error_bias[j] = k_fold_CV_terrain(x, y, z, folds=5,
+                                                  dim=j, hyperparam=1,
+                                                  method="OLS", Train=False)
+
         # Plot for FrankeFunction
-        #pred_log = np.log10(pred_error)
-        #pred_log_train = np.log10(pred_error_train)
         fig, ax = plt.subplots()
         plt.title("Bias-variance tradeoff train and test data\n "+str(plots)+" for terrain data")
         fig.set_size_inches(0.9 * 2 * 2.9, 0.9 * 2 * 1.81134774961)
@@ -537,9 +546,7 @@ def terrain_plot(x, y, z, p, plots=""):
         ax.plot(complexity, pred_error, linestyle="--", label="Test", color="r")
         ax.set_xlabel("Model Complexity [polynomial degree]")
         ax.set_xticks(complexity[::2])
-        ax.set_ylabel("Prediction Error")#(r"log$_{10}$(Prediction Error)")
-        #ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
-                 #np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
+        ax.set_ylabel("Prediction Error")
 
         ax.text(0.1, 0.75, "High bias\nLow variance\n<------",
                 horizontalalignment="left",
@@ -553,121 +560,139 @@ def terrain_plot(x, y, z, p, plots=""):
         ax.legend(loc=9)
         fig.tight_layout()
         fig.savefig(path+"biasvariancetradeoff_"+str(plots)+"_terrain.png", dpi=1000)
+
+        # Plot for Variance of test data
+        plt.figure()
+        plt.title("Variance of the test data with "+str(plots)+"\n for terrain data")
+        plt.plot(complexity, error_var)
+        plt.xlabel(r"log$_{10}\lambda$")
+        plt.savefig(path+"biasvar_Var_"+str(plots)+"_terrain.png", dpi=1000)
+
+        # Plot for Bias of test data
+        plt.figure()
+        plt.title("Bias of the test data with "+str(plots)+"\n for terrain data")
+        plt.plot(complexity, error_bias)
+        plt.xlabel(r"log$_{10}\lambda$")
+        plt.savefig(path+"biasvar_Bias_"+str(plots)+"_terrain.png", dpi=1000)
         plt.show()
 
     elif plots == "Ridge":
-        lambda_Ridge = np.logspace(-7, 1, 50)
+        lambda_Ridge = np.logspace(-7, 1, 30)
         pred_error_ridge = np.zeros_like(lambda_Ridge)
         pred_error_train_ridge = np.zeros_like(pred_error_ridge)
         error_var = np.zeros_like(pred_error_ridge)
         error_bias = np.zeros_like(pred_error_ridge)
-
-        for j, lamb in enumerate(lambda_Ridge):
-            if j % 10 == 0:
-                print(j)
-            pred_error_ridge[j], pred_error_train_ridge[j] = k_fold_CV_terrain(x, y, z, folds=5, 
-                                                  dim=5, hyperparam=lamb, method="Ridge", Train=True)
-            # Calculate variance and Bias for test data
-            _, _, error_var[j], error_bias[j] = k_fold_CV_terrain(x, y, z, folds=5, 
-                                                  dim=5, hyperparam=lamb, 
+        dims = [5, 10, 15, 20]
+        for i, d in enumerate(dims):
+            for j, lamb in enumerate(lambda_Ridge):
+                if j % 10 == 0:
+                    print(j)
+                pred_error_ridge[j], pred_error_train_ridge[j] = k_fold_CV_terrain(x, y, z, folds=5,
+                                                  dim=d, hyperparam=lamb, method="Ridge", Train=True)
+                # Calculate variance and Bias for test data
+                _, _, error_var[j], error_bias[j] = k_fold_CV_terrain(x, y, z, folds=5,
+                                                  dim=d, hyperparam=lamb,
                                                   method="Ridge", Train=False)
 
-        # Plot for FrankeFunction
-        pred_log = np.log10(pred_error_ridge)
-        pred_log_train = np.log10(pred_error_train_ridge)
-        fig, ax = plt.subplots()
-        plt.title("Bias-variance tradeoff train and test data\n "+str(plots)+" for terrain data")
-        fig.set_size_inches(0.9 * 2 * 2.9, 0.9 * 2 * 1.81134774961)
-        ax.plot(np.log10(lambda_Ridge), pred_log_train, label="Train", color="g")
-        ax.plot(np.log10(lambda_Ridge), pred_log, linestyle="--", label="Test", color="r")
-        ax.set_xlabel(r"log$_{10}\lambda$")
-        ax.set_ylabel(r"log$_{10}$(Prediction Error)")
-        ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
-                     np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
-    
-        ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
-                horizontalalignment="left",
-                verticalalignment="baseline",
-                transform=ax.transAxes)
-        ax.text(0.95, 0.75, "High bias\nLow variance\n------>",
-                horizontalalignment="right",
-                verticalalignment="baseline",
-                transform=ax.transAxes)
-        ax.legend(loc=9)
-        fig.tight_layout()
-        fig.savefig(path+"biasvariancetradeoff_"+str(plots)+"_terrain.png", dpi=1000)
-    
-        # Plot for Variance of test data
-        plt.figure()
-        plt.title("Variance of the test data with "+str(plots)+"\n for terrain data")
-        plt.plot(np.log10(lambda_Ridge), error_var)
-        plt.xlabel(r"log$_{10}\lambda$")
-        plt.savefig(path+"biasvar_Var_"+str(plots)+"_terrain.png", dpi=1000)
-    
-        # Plot for Bias of test data
-        plt.figure()
-        plt.title("Bias of the test data with "+str(plots)+"\n for terrain data")
-        plt.plot(np.log10(lambda_Ridge), error_bias)
-        plt.xlabel(r"log$_{10}\lambda$")
-        plt.savefig(path+"biasvar_Bias_"+str(plots)+"_terrain.png", dpi=1000)
-        plt.show()
-    
+            # Plot for FrankeFunction
+            pred_log = np.log10(pred_error_ridge)
+            pred_log_train = np.log10(pred_error_train_ridge)
+            fig, ax = plt.subplots()
+            plt.title("Bias-variance tradeoff train and test data\n "+str(plots)+\
+                      " for terrain data and dim="+str(d))
+            fig.set_size_inches(0.9 * 2 * 2.9, 0.9 * 2 * 1.81134774961)
+            ax.plot(np.log10(lambda_Ridge), pred_log_train, label="Train", color="g")
+            ax.plot(np.log10(lambda_Ridge), pred_log, linestyle="--", label="Test", color="r")
+            ax.set_xlabel(r"log$_{10}\lambda$")
+            ax.set_ylabel(r"log$_{10}$(Prediction Error)")
+            ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
+                         np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
+
+            ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
+                    horizontalalignment="left",
+                    verticalalignment="baseline",
+                    transform=ax.transAxes)
+            ax.text(0.95, 0.75, "High bias\nLow variance\n------>",
+                    horizontalalignment="right",
+                    verticalalignment="baseline",
+                    transform=ax.transAxes)
+            ax.legend(loc=9)
+            fig.tight_layout()
+            fig.savefig(path+"biasvariancetradeoff_"+str(plots)+"_dim_"+str(d)+"_terrain.png", dpi=1000)
+
+            # Plot for Variance of test data
+            plt.figure()
+            plt.title("Variance of the test data with "+str(plots)+"\n for terrain data and dim="+str(d))
+            plt.plot(np.log10(lambda_Ridge), error_var)
+            plt.xlabel(r"log$_{10}\lambda$")
+            plt.savefig(path+"biasvar_Var_"+str(plots)+"_dim_"+str(d)+"_terrain.png", dpi=1000)
+
+            # Plot for Bias of test data
+            plt.figure()
+            plt.title("Bias of the test data with "+str(plots)+"\n for terrain data and dim="+str(d))
+            plt.plot(np.log10(lambda_Ridge), error_bias)
+            plt.xlabel(r"log$_{10}\lambda$")
+            plt.savefig(path+"biasvar_Bias_"+str(plots)+"_dim_"+str(d)+"_terrain.png", dpi=1000)
+            plt.show()
+
     elif plots == "Lasso":
-        lambda_Lasso = np.logspace(-10, -1, 50)
+        lambda_Lasso = np.logspace(-10, -1, 30)
         pred_error = np.zeros_like(lambda_Lasso)
         pred_error_train = np.zeros_like(pred_error)
         error_var = np.zeros_like(pred_error)
         error_bias = np.zeros_like(pred_error)
-
-        for j, lamb in enumerate(lambda_Lasso):
-            if j % 10 == 0:
-                print(j)
-            pred_error[j], pred_error_train[j] = k_fold_CV_terrain(x, y, z, folds=5, 
-                                                  dim=5, hyperparam=lamb, 
+        dims = [5, 10, 15, 20]
+        for i, d in enumerate(dims):
+            for j, lamb in enumerate(lambda_Lasso):
+                if j % 10 == 0:
+                    print(j)
+                pred_error[j], pred_error_train[j] = k_fold_CV_terrain(x, y, z, folds=5,
+                                                  dim=d, hyperparam=lamb,
                                                   method="Lasso", Train=True)
-            # Calculate variance and Bias for test data
-            _, _, error_var[j], error_bias[j] = k_fold_CV_terrain(x, y, z, folds=5, 
-                                                   dim=5, hyperparam=lamb, 
+                # Calculate variance and Bias for test data
+                _, _, error_var[j], error_bias[j] = k_fold_CV_terrain(x, y, z, folds=5,
+                                                   dim=d, hyperparam=lamb,
                                                    method="Lasso", Train=False)
 
-        # Plot for FrankeFunction
-        pred_log = np.log10(pred_error)
-        pred_log_train = np.log10(pred_error_train)
-        fig, ax = plt.subplots()
-        plt.title("Bias-variance tradeoff train and test data\n "+str(plots)+" for terrain data")
-        fig.set_size_inches(0.9 * 2 * 2.9, 0.9 * 2 * 1.81134774961)
-        ax.plot(np.log10(lambda_Lasso), pred_log_train, label="Train", color="g")
-        ax.plot(np.log10(lambda_Lasso), pred_log, linestyle="--", label="Test", color="r")
-        ax.set_xlabel(r"log$_{10}\lambda$")
-        ax.set_ylabel(r"log$_{10}$(Prediction Error)")
-        ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
-                     np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
-    
-        ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
-                horizontalalignment="left",
-                verticalalignment="baseline",
-                transform=ax.transAxes)
-        ax.text(0.95, 0.75, "High bias\nLow variance\n------>",
-                horizontalalignment="right",
-                verticalalignment="baseline",
-                transform=ax.transAxes)
-        ax.legend(loc=9)
-        fig.tight_layout()
-        fig.savefig(path+"biasvariancetradeoff_"+str(plots)+"_terrain.png", dpi=1000)
-    
-        # Plot for Variance of test data
-        plt.figure()
-        plt.title("Variance of the test data with "+str(plots)+"\n for terrain data")
-        plt.plot(np.log10(lambda_Lasso), error_var)
-        plt.xlabel(r"log$_{10}\lambda$")
-        fig.tight_layout()
-        plt.savefig(path+"biasvar_Var_"+str(plots)+"_terrain.png", dpi=1000)
-    
-        # Plot for Bias of test data
-        plt.figure()
-        plt.title("Bias of the test data with "+str(plots)+"\n for terrain data")
-        plt.plot(np.log10(lambda_Lasso), error_bias)
-        plt.xlabel(r"log$_{10}\lambda$")
-        fig.tight_layout()
-        plt.savefig(path+"biasvar_Bias_"+str(plots)+"_terrain.png", dpi=1000)
-        plt.show()
+            # Plot for FrankeFunction
+            pred_log = np.log10(pred_error)
+            pred_log_train = np.log10(pred_error_train)
+            fig, ax = plt.subplots()
+            plt.title("Bias-variance tradeoff train and test data\n "+str(plots)+\
+                      " for terrain data and dim="+str(d))
+            fig.set_size_inches(0.9 * 2 * 2.9, 0.9 * 2 * 1.81134774961)
+            ax.plot(np.log10(lambda_Lasso), pred_log_train, label="Train", color="g")
+            ax.plot(np.log10(lambda_Lasso), pred_log, linestyle="--", label="Test", color="r")
+            ax.set_xlabel(r"log$_{10}\lambda$")
+            ax.set_ylabel(r"log$_{10}$(Prediction Error)")
+            ax.set_ylim([np.min(pred_log_train) - np.min(np.abs(pred_log_train)) * 0.1,
+                         np.max(pred_log) + np.max(np.abs(pred_log)) * 0.3])
+
+            ax.text(0.05, 0.75, "Low bias\nHigh variance\n<------",
+                    horizontalalignment="left",
+                    verticalalignment="baseline",
+                    transform=ax.transAxes)
+            ax.text(0.95, 0.75, "High bias\nLow variance\n------>",
+                    horizontalalignment="right",
+                    verticalalignment="baseline",
+                    transform=ax.transAxes)
+            ax.legend(loc=9)
+            fig.tight_layout()
+            fig.savefig(path+"biasvariancetradeoff_"+str(plots)+"_dim_"+str(d)+"_terrain.png", dpi=1000)
+
+            # Plot for Variance of test data
+            plt.figure()
+            plt.title("Variance of the test data with "+str(plots)+"\n for terrain data and dim="+str(d))
+            plt.plot(np.log10(lambda_Lasso), error_var)
+            plt.xlabel(r"log$_{10}\lambda$")
+            fig.tight_layout()
+            plt.savefig(path+"biasvar_Var_"+str(plots)+"_dim_"+str(d)+"_terrain.png", dpi=1000)
+
+            # Plot for Bias of test data
+            plt.figure()
+            plt.title("Bias of the test data with "+str(plots)+"\n for terrain data and dim="+str(d))
+            plt.plot(np.log10(lambda_Lasso), error_bias)
+            plt.xlabel(r"log$_{10}\lambda$")
+            fig.tight_layout()
+            plt.savefig(path+"biasvar_Bias_"+str(plots)+"_dim_"+str(d)+"_terrain.png", dpi=1000)
+            plt.show()
