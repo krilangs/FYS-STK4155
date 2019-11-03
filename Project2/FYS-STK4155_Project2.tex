@@ -1,0 +1,94 @@
+\documentclass[12pt,a4paper,english]{article}
+\usepackage{times}
+\usepackage[utf8]{inputenc}
+\usepackage{babel,textcomp}
+\usepackage{mathpazo}
+\usepackage{mathtools}
+\usepackage{amsmath,amssymb}
+\usepackage{ dsfont }
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfig} 
+\usepackage[colorlinks]{hyperref}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{backgroundcolor=\color{lbcolor},tabsize=4,rulecolor=,language=python,basicstyle=\scriptsize,upquote=true,aboveskip={1.5\baselineskip},columns=fixed,numbers=left,showstringspaces=false,extendedchars=true,breaklines=true,
+prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,showtabs=false,showspaces=false,showstringspaces=false,identifierstyle=\ttfamily,keywordstyle=\color[rgb]{0,0,1},commentstyle=\color[rgb]{0.133,0.545,0.133},stringstyle=\color[rgb]{0.627,0.126,0.941},literate={å}{{\r a}}1 {Å}{{\r A}}1 {ø}{{\o}}1}
+
+% Use for references
+\usepackage[sort&compress,square,comma,numbers]{natbib}
+\DeclareRobustCommand{\citeext}[1]{\citeauthor{#1}~\cite{#1}}
+
+% Fix spacing in tables and figures
+%\usepackage[belowskip=-8pt,aboveskip=5pt]{caption}
+%\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+% Change the page layout
+%\usepackage[showframe]{geometry}
+\usepackage{layout}
+\setlength{\hoffset}{-0.5in}  % Length left
+%\setlength{\voffset}{-1.1in}  % Length on top
+\setlength{\textwidth}{470pt}  % Width
+%\setlength{\textheight}{720pt}  % Height
+%\setlength{\footskip}{25pt}
+
+\newcommand{\VEV}[1]{\langle#1\rangle}
+\title{FYS-STK 4155 Project 2}
+\date{}
+\author{ Kristoffer Langstad \footnote{\url{https://github.com/krilangs/FYS-STK4155}}\\ \textit{krilangs@uio.no}}
+
+\begin{document}%\layout
+\maketitle
+\begin{abstract}
+	...
+\end{abstract}
+\section{Introduction}
+A much used method in statistical analysis is classification with Logistic regression analysis. With this type of method we can sort large amount of data and predict outcomes of different situations. 
+
+In this project we will develop our own logistic regression code for classification using Python to study credit card data from Taiwan taken from the Machine Learning Repository UCI \cite{UCI}. Since this data set has been previously studied in a scientific research paper by \citet{origarticle} considering data mining techniques, we will use these results in the article to compare with our results. We will also develop our own multilayer perceptron code (MLP) and Neural Network code (NN), with different gradient descent solvers and cost functions. With these methods we will classify the credit card data with the Logistic regression and Neural Network, and solve a regression problem on the Franke function with the Neural Network code. For the Franke function we compare with results from a previous project for solving the regression problem using standard least squares \cite{proj1}.
+
+First we will look at the data sets to be evaluated in this project. This includes the Taiwan credit card data (classification) and the Franke function (regression). Then in the theory section, we look at the theory of the different methods and algorithms to be used in this project and implemented into a Python program for solving the classification and regression problems. In the methods section we look at the implementation of the methods discussed in the theory section. Here we build our code for solving the classification and regression problems. We start by reading in the credit card data. This data set is then altered to account for missing and/or wrongly implemented values and then scaled. Then we create the Logistic regressor with gradient descent solvers and cost functions to being able to reproduce the results in the scientific article \cite{origarticle}. Then we create a Feed Forward Neural Network code with back propagation and cost functions by training the network to find optimal weights and biases. We test different regularization parameters and learning rates to find the optimal accuracy score. Then we use the Neural Network code with appropriate cost function to perform a regression analysis in the Franke function data. In the Results section we compare and discuss the results we get from the Logistic regression and Neural Network analysis with use of different cost functions, gradient descent solvers, regularization parameters  and learning rates. Then we compare and discuss the results from the previous regression project for the Franke function and the regression analysis with Neural Network. In the conclusion section we come up with a critical evaluation of the various algorithms we have used in this project. From this evaluation we should find out which algorithm works best for the classification case and which is best for the regression case.
+
+\section{Data}
+\subsection{Classification: Credit Card Data}
+The classification analysis in this project is of the Taiwan default payments credit card data downloaded from the UCI \cite{UCI}. The outcome of the default payment is binary as (YES=1, NO=0). The original data set contains 30 000 data points with 23 explanatory variables (24 with the output):
+\begin{enumerate}
+	\item X1: Amount of the given credit (NT dollar): it includes both the individual consumer credit and his/her family (supplementary) credit. 
+	\item X2: Gender (1 = male; 2 = female). 
+	\item X3: Education (1 = graduate school; 2 = university; 3 = high school; 4 = others). 
+	\item X4: Marital status (1 = married; 2 = single; 3 = others). 
+	\item X5: Age (year). 
+	\item X6 - X11: History of past payment. We tracked the past monthly payment records (from April to September, 2005) as follows: X6 = the repayment status in September, 2005; X7 = the repayment status in August, 2005; . . .;X11 = the repayment status in April, 2005. The measurement scale for the repayment status is: -1 = pay duly; 1 = payment delay for one month; 2 = payment delay for two months; . . .; 8 = payment delay for eight months; 9 = payment delay for nine months and above. 
+	\item X12-X17: Amount of bill statement (NT dollar). X12 = amount of bill statement in September, 2005; X13 = amount of bill statement in August, 2005; . . .; X17 = amount of bill statement in April, 2005. 
+	\item X18-X23: Amount of previous payment (NT dollar). X18 = amount paid in September, 2005; X19 = amount paid in August, 2005; . . .;X23 = amount paid in April, 2005. 
+\end{enumerate}
+By analysis of the data set; there are errors that have to be taken into consideration where there are values that does not correspond to the values that should be given from the variables description.
+\subsection{Regression: Franke's function}
+The regression analysis in this project we evaluate the two-dimensional Frank function which is defined as:
+\begin{align}
+\label{eq:Franke_func}
+f(x,y)=&\frac{3}{4}\exp\left(-\frac{(9x-2)^2}{4}-\frac{(9y-2)^2}{4}\right)+
+\frac{3}{4}\exp\left(-\frac{(9x+1)^2}{49}-\frac{(9y+1)^2}{10}\right)\\ 
++& \frac{1}{2}\exp\left(-\frac{(9x-7)^2}{4}-\frac{(9y-3)^2}{4}\right)- \frac{1}{5}\exp\left(-(9x-4)^2-(9y-7)^2\right) \nonumber
+\end{align}
+This function is defined for $x,y\in[0,1]$, and is a widely used function for testing various interpolation and fitting algorithms. With this function we also add a normally distributed noise $\epsilon\sim \mathcal{N}(0,\sigma^2)$
+\begin{equation*}
+F(x,y)=f(x,y)+\epsilon.
+\end{equation*}
+
+\section{Theory}
+\section{Methods}
+\section{Results}
+\section{Conclusion}
+\appendix
+\section{Appendix}
+\label{sect:appendix}
+Link to GitHub repository:\\
+\url{https://github.com/krilangs/FYS-STK4155/tree/master/Project2}
+
+\bibliographystyle{plainnat}
+\bibliography{myrefs}
+\end{document}
