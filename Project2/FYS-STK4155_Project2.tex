@@ -54,7 +54,7 @@ First we will look at the data sets to be evaluated in this project. This includ
 
 \section{Data}
 \subsection{Classification: Credit Card Data}
-The classification analysis in this project is of the Taiwan default payments credit card data downloaded from the UCI \cite{UCI}. The outcome of the default payment is binary as (YES=1, NO=0). The original data set contains 30 000 data points with 23 explanatory variables (24 with the output):
+The classification analysis in this project is of the Taiwan default payments credit card data downloaded from the UCI \cite{UCI} as an .xls file. The outcome of the default payment is binary as (YES=1, NO=0). The original data set contains 30 000 data points with 23 explanatory variables (24 with the output):
 \begin{enumerate}
 	\item X1: Amount of the given credit (NT dollar): it includes both the individual consumer credit and his/her family (supplementary) credit. 
 	\item X2: Gender (1 = male; 2 = female). 
@@ -80,6 +80,75 @@ F(x,y)=f(x,y)+\epsilon.
 \end{equation*}
 
 \section{Theory}
+\subsection{Regression}
+For the regression evaluation we will look at the $R^2$ score to evaluate the performance of the model as
+\begin{equation}
+\label{eq:R2_score}
+R^2(\textbf{y},\tilde{\textbf{y}})=1-\frac{\sum_{i=0}^{n-1}(y_i-\tilde{y})^2}{\sum_{i=0}^{n-1}(y_i-\bar{y})^2},
+\end{equation}
+with model $\tilde{\textbf{y}}$ and the mean value, $\bar{y}$, of the data \textbf{y} as
+\[\bar{y}=\frac{1}{n}\sum_{i=0}^{n-1}y_i.\]
+
+\subsection{Classification}
+For the classification we will measure the performance of the model with the accuracy score as
+\begin{equation}
+\label{eq:accuracy_score}
+Accuracy=\frac{\sum_{i=1}^{n}I(t_i=y_i)}{n}
+\end{equation}
+with target $t_i$, model output $y_i$, number of targets $n$ and indicator function $I$ as
+\[I=\begin{cases}
+1, \text{ if } t_i=y_i\\
+0, \text{ if } t_i\neq y_i
+\end{cases}.\]
+The optimal accuracy score is 1
+
+\subsection{Logistic Regression (LR)}
+In logistic regression we use linear regression in $x$ to model the posterior probabilities with sums in the domain [0,1]. For our case with logistic regression, the output is a binary case which gives either 1 if the credit card user could default the credit card debt or 0 if not. The probability that a data point $x_i$ belongs to a specific category $y_i$ can be represented by the likelihood given by the logistic (Sigmoid) function with two classes as
+\begin{equation}
+\label{eq:sigmoid}
+p(x)=\frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}},
+\end{equation}
+where $\hat{\beta}$ are the weights we want to extract from the data.
+
+\subsubsection{Maximum Likelihood Estimation (MLE)}
+For the total likelihood for all the possible outcomes from a given dataset $\mathcal{D}=\{(y_i, x_i)\}$ with binary variables $y_i\in\{0,1\}$ that are independent and identically distributed (i.i.d.) we use the MLE principle:
+\begin{equation}
+\label{eq:max_likelihood}
+P(\mathcal{D}|\hat{\beta})=\prod_{i=1}^{n}\left[p(y_i=1|x_i,\hat{\beta})\right]^{y_i}\left[1-p(y_i=1|x_i,\hat{\beta})\right]^{1-y_i}
+\end{equation}
+
+\subsubsection{Cost function and cross-entropy}
+Define cost-function from the MLE principle as 
+\begin{align}
+\mathcal{C}(\hat{\beta})&=-\log[P(\mathcal{D}|\hat{\beta})]\nonumber\\
+\label{eq:cost_func}
+&= -\sum_{i=1}^{n}\left(y_i\log[P(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-P(y_i=1|x_i,\hat{\beta})]\right).
+\end{align}
+This can then be rewritten to what in statistics is called the cross-entropy
+\begin{equation}
+\label{eq:cross_entropy}
+\mathcal{C}(\hat{\beta})=-\sum_{i=1}^{n}\left(y_i(\beta_0+\beta_1x_i)-\log(1+e^{\beta_0+\beta_1x_i}\right).
+\end{equation}
+
+Then minimize the cross-entropy by taking the derivative of the cross-entropy (eq. \ref{eq:cross_entropy}) with respect to the $\beta_i$ values:
+\begin{align*}
+\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \beta_0}&=-\sum_{i=1}^{n}\left(y_i-\frac{e^{\beta_0+\beta_1x_i}}{1+e^{\beta_0+\beta_1x_i}}\right)\\
+\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \beta_1}&=-\sum_{i=1}^{n}\left(y_ix_i-x_i\frac{e^{\beta_0+\beta_1x_i}}{1+e^{\beta_0+\beta_1x_i}}\right)
+\end{align*}
+Define vector $\hat{y}\in\mathcal{R}^n$ for $y_i$, matrix $\hat{X}\in\mathcal{R}^{n\times p}$ with $x_i$ values and vector $\hat{p}\in\mathcal{R}^n$ for fitted probabilities $p(y_i|x_i,\hat{\beta})$ with non-linear dependence on $\hat{\beta}$. The minimized cross-entropy becomes
+\begin{equation}
+\label{eq:min_cross_entropy}
+\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}}=-\hat{X}^T(\hat{y}-\hat{p}).
+\end{equation}
+Define diagonal matrix $\hat{W}$ with elements $p(y_i|x_i,\hat{\beta})(1-p(y_i|x_i,\hat{\beta}))$. The second derivative of the cross-entropy, also called the Hessian matrix, is then in compact form:
+\begin{equation}
+\label{eq:Hessian}
+\frac{\partial^2 \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}\partial \hat{\beta}^T}=\hat{X}^T\hat{W}\hat{X}.
+\end{equation}
+
+\subsection{Gradient Descent (GD)}
+\subsection{Neural Network (NN)}
+
 \section{Methods}
 \section{Results}
 \section{Conclusion}
