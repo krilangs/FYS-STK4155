@@ -29,9 +29,9 @@ prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,show
 % Change the page layout
 %\usepackage[showframe]{geometry}
 \usepackage{layout}
-\setlength{\hoffset}{-0.5in}  % Length left
+\setlength{\hoffset}{-0.6in}  % Length left
 %\setlength{\voffset}{-1.1in}  % Length on top
-\setlength{\textwidth}{470pt}  % Width
+\setlength{\textwidth}{480pt}  % Width
 %\setlength{\textheight}{720pt}  % Height
 %\setlength{\footskip}{25pt}
 
@@ -45,7 +45,9 @@ prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,show
 \begin{abstract}
 	...
 \end{abstract}
+
 \section{Introduction}
+\label{sect:Intro}
 A much used method in statistical analysis is classification with Logistic regression analysis. With this type of method we can sort large amount of data and predict outcomes of different situations. 
 
 In this project we will develop our own logistic regression code for classification using Python to study credit card data from Taiwan taken from the Machine Learning Repository UCI \cite{UCI}. Since this data set has been previously studied in a scientific research paper by \citet{origarticle} considering data mining techniques, we will use these results in the article to compare with our results. We will also develop our own multilayer perceptron code (MLP) and Neural Network code (NN), with different gradient descent solvers and cost functions. With these methods we will classify the credit card data with the Logistic regression and Neural Network, and solve a regression problem on the Franke function with the Neural Network code. For the Franke function we compare with results from a previous project for solving the regression problem using standard least squares \cite{proj1}.
@@ -53,6 +55,7 @@ In this project we will develop our own logistic regression code for classificat
 First we will look at the data sets to be evaluated in this project. This includes the Taiwan credit card data (classification) and the Franke function (regression). Then in the theory section, we look at the theory of the different methods and algorithms to be used in this project and implemented into a Python program for solving the classification and regression problems. In the methods section we look at the implementation of the methods discussed in the theory section. Here we build our code for solving the classification and regression problems. We start by reading in the credit card data. This data set is then altered to account for missing and/or wrongly implemented values and then scaled. Then we create the Logistic regressor with gradient descent solvers and cost functions to being able to reproduce the results in the scientific article \cite{origarticle}. Then we create a Feed Forward Neural Network code with back propagation and cost functions by training the network to find optimal weights and biases. We test different regularization parameters and learning rates to find the optimal accuracy score. Then we use the Neural Network code with appropriate cost function to perform a regression analysis in the Franke function data. In the Results section we compare and discuss the results we get from the Logistic regression and Neural Network analysis with use of different cost functions, gradient descent solvers, regularization parameters  and learning rates. Then we compare and discuss the results from the previous regression project for the Franke function and the regression analysis with Neural Network. In the conclusion section we come up with a critical evaluation of the various algorithms we have used in this project. From this evaluation we should find out which algorithm works best for the classification case and which is best for the regression case.
 
 \section{Data}
+\label{sect:Data}
 \subsection{Classification: Credit Card Data}
 The classification analysis in this project is of the Taiwan default payments credit card data downloaded from the UCI \cite{UCI} as an .xls file. The outcome of the default payment is binary as (YES=1, NO=0). The original data set contains 30 000 data points with 23 explanatory variables (24 with the output):
 \begin{enumerate}
@@ -66,6 +69,7 @@ The classification analysis in this project is of the Taiwan default payments cr
 	\item X18-X23: Amount of previous payment (NT dollar). X18 = amount paid in September, 2005; X19 = amount paid in August, 2005; . . .;X23 = amount paid in April, 2005. 
 \end{enumerate}
 By analysis of the data set; there are errors that have to be taken into consideration where there are values that does not correspond to the values that should be given from the variables description.
+
 \subsection{Regression: Franke's function}
 The regression analysis in this project we evaluate the two-dimensional Frank function which is defined as:
 \begin{align}
@@ -80,7 +84,9 @@ F(x,y)=f(x,y)+\epsilon.
 \end{equation*}
 
 \section{Theory}
+\label{sect:Theory}
 \subsection{Regression}
+\label{subsect:Regression}
 For the regression evaluation we will look at the $R^2$ score to evaluate the performance of the model as
 \begin{equation}
 \label{eq:R2_score}
@@ -90,6 +96,7 @@ with model $\tilde{\textbf{y}}$ and the mean value, $\bar{y}$, of the data \text
 \[\bar{y}=\frac{1}{n}\sum_{i=0}^{n-1}y_i.\]
 
 \subsection{Classification}
+\label{subsect:Classification}
 For the classification we will measure the performance of the model with the accuracy score as
 \begin{equation}
 \label{eq:accuracy_score}
@@ -100,61 +107,81 @@ with target $t_i$, model output $y_i$, number of targets $n$ and indicator funct
 1, \text{ if } t_i=y_i\\
 0, \text{ if } t_i\neq y_i
 \end{cases}.\]
-The optimal accuracy score is 1
+The optimal accuracy score is 1.
 
 \subsection{Logistic Regression (LR)}
-In logistic regression we use linear regression in $x$ to model the posterior probabilities with sums in the domain [0,1]. For our case with logistic regression, the output is a binary case which gives either 1 if the credit card user could default the credit card debt or 0 if not. The probability that a data point $x_i$ belongs to a specific category $y_i$ can be represented by the likelihood given by the logistic (Sigmoid) function with two classes as
+\label{subsect:LR}
+In logistic regression we use linear regression in $x$ to model the posterior probabilities with sums in the domain [0,1]. Logistic regression is what is called a soft classifier. This means that it outputs the probability of a given category. For our case with logistic regression, the output is a binary case which gives either 1 if the credit card user could default the credit card debt or 0 if not. The probability that a data point $x_i$ belongs to a specific category $y_i$ can be represented by the likelihood given by the logistic (Sigmoid) function as
 \begin{equation}
 \label{eq:sigmoid}
-p(x)=\frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}},
+p(\hat{x})=\frac{e^{\hat{\beta}\hat{x}}}{1+e^{\hat{\beta}\hat{x}}},
 \end{equation}
-where $\hat{\beta}$ are the weights we want to extract from the data.
+where $\hat{\beta}$ are the weights/predictors we want to extract from the data. The probabilities for the binary case have the following relation:
+\begin{equation*}
+p(y_i=0|x_i,\hat{\beta})=1-p(y_i=1|x_i,\hat{\beta})
+\end{equation*}
 
 \subsubsection{Maximum Likelihood Estimation (MLE)}
-For the total likelihood for all the possible outcomes from a given dataset $\mathcal{D}=\{(y_i, x_i)\}$ with binary variables $y_i\in\{0,1\}$ that are independent and identically distributed (i.i.d.) we use the MLE principle:
+\label{subsect:MLE}
+For the total likelihood for all the possible outcomes from a given dataset $\mathcal{D}=\{(y_i, x_i)\}$ with binary variables $y_i\in\{0,1\}$, that are independent and identically distributed (i.i.d.), we use the MLE principle to maximize the probability of seeing the observed data:
 \begin{equation}
 \label{eq:max_likelihood}
 P(\mathcal{D}|\hat{\beta})=\prod_{i=1}^{n}\left[p(y_i=1|x_i,\hat{\beta})\right]^{y_i}\left[1-p(y_i=1|x_i,\hat{\beta})\right]^{1-y_i}
 \end{equation}
-
-\subsubsection{Cost function and cross-entropy}
-Define cost-function from the MLE principle as 
-\begin{align}
-\mathcal{C}(\hat{\beta})&=-\log[P(\mathcal{D}|\hat{\beta})]\nonumber\\
-\label{eq:cost_func}
-&= -\sum_{i=1}^{n}\left(y_i\log[P(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-P(y_i=1|x_i,\hat{\beta})]\right).
-\end{align}
-This can then be rewritten to what in statistics is called the cross-entropy
+From this likelihood we get the log-likelihood as:
 \begin{equation}
-\label{eq:cross_entropy}
+\label{eq:log_likelihood}
+P_{\log }(\hat{\beta})=\log[P(\mathcal{D}|\hat{\beta})]=\sum_{i=1}^{n}\left(y_i\log[P(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-P(y_i=1|x_i,\hat{\beta})]\right)
+\end{equation}
+
+\subsubsection{Cost function/cross-entropy}
+\label{subsect:Cost_func}
+Define the cost function as the negative of the log-likelihood as 
+\begin{align}
+\label{eq:cost_func}
+\mathcal{C}(\hat{\beta})=-P_{\log }(\hat{\beta})= -\sum_{i=1}^{n}\left(y_i\log[P(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-P(y_i=1|x_i,\hat{\beta})]\right).
+\end{align}
+Maximization of the log-likelihood is then the same as minimizing the cost function. In statistics the cost function is also called the cross-entropy. Rewriting of the cost function (eq. \ref{eq:cost_func}) the leads to:
+\begin{equation}
+\label{eq:cost_func_rewritten}
 \mathcal{C}(\hat{\beta})=-\sum_{i=1}^{n}\left(y_i(\beta_0+\beta_1x_i)-\log(1+e^{\beta_0+\beta_1x_i}\right).
 \end{equation}
 
-Then minimize the cross-entropy by taking the derivative of the cross-entropy (eq. \ref{eq:cross_entropy}) with respect to the $\beta_i$ values:
-\begin{align*}
-\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \beta_0}&=-\sum_{i=1}^{n}\left(y_i-\frac{e^{\beta_0+\beta_1x_i}}{1+e^{\beta_0+\beta_1x_i}}\right)\\
-\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \beta_1}&=-\sum_{i=1}^{n}\left(y_ix_i-x_i\frac{e^{\beta_0+\beta_1x_i}}{1+e^{\beta_0+\beta_1x_i}}\right)
-\end{align*}
-Define vector $\hat{y}\in\mathcal{R}^n$ for $y_i$, matrix $\hat{X}\in\mathcal{R}^{n\times p}$ with $x_i$ values and vector $\hat{p}\in\mathcal{R}^n$ for fitted probabilities $p(y_i|x_i,\hat{\beta})$ with non-linear dependence on $\hat{\beta}$. The minimized cross-entropy becomes
+The $\hat{\beta}$ parameters are found through minimization of the cost function by taking the derivative of the cost function (eq. \ref{eq:cost_func_rewritten}) with respect to the $\hat{\beta}$ values. Define vector $\hat{y}\in\mathcal{R}^n$ for $n$ elements $y_i$, matrix $\hat{X}\in\mathcal{R}^{n\times p}$ with $x_i$ values and vector $\hat{p}\in\mathcal{R}^n$ for fitted probabilities $p(y_i|x_i,\hat{\beta})$ with non-linear dependence on $\hat{\beta}$. The minimized cost function becomes
 \begin{equation}
-\label{eq:min_cross_entropy}
+\label{eq:min_cost_func}
 \frac{\partial \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}}=-\hat{X}^T(\hat{y}-\hat{p}).
 \end{equation}
-Define diagonal matrix $\hat{W}$ with elements $p(y_i|x_i,\hat{\beta})(1-p(y_i|x_i,\hat{\beta}))$. The second derivative of the cross-entropy, also called the Hessian matrix, is then in compact form:
+This gives set of linear equations to solve the system for $\hat{\beta}$. Define diagonal matrix $\hat{W}$ with elements $p(y_i|x_i,\hat{\beta})(1-p(y_i|x_i,\hat{\beta}))$. The second derivative of the cost function, also called the Hessian matrix, is then in compact form:
 \begin{equation}
 \label{eq:Hessian}
 \frac{\partial^2 \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}\partial \hat{\beta}^T}=\hat{X}^T\hat{W}\hat{X}.
 \end{equation}
 
+The resulting equation of minimization of the cost function is non-linear, and have to be solved using minimization algorithms called gradient descent methods.
+
 \subsection{Gradient Descent (GD)}
-\subsection{Neural Network (NN)}
+\label{sect: GD}
+...
+\subsection{Neural Networks (NN)}
+\label{sect:NN}
+Neural networks are computational models that are supposed to mimic biological systems, and they consist of layers of nodes that are connected. Neural networks can be used in both regression and classification problems. Neural networks have, as seen in Figure \ref{fig:Neural_network}, an input layer, a hidden layer and an output layer. This is a simple case with two input variables/nodes, one hidden layer with 4 nodes and one node in the output layer. Neural networks can contain many hidden layers, and the number of nodes in each layer have to be decided by us. The input and output layers contain as many nodes as there are input and output variables. The number of output variables vary depending on the problem. From the figure we see that the input variables are sent to the hidden layer nodes where they are processed with an activation function before sent to the output layer as our result. The connection between the nodes are affected by weight variables $w$.
+
+\begin{figure}[htbp]
+	\centering\includegraphics[width=0.3\linewidth]{Neural_network.png}
+	\caption{Schematic diagram of a simple single hidden layer, feed-forward neural network with two input nodes, four nodes in the single hidden layer and one output node.\label{fig:Neural_network}}
+\end{figure} 
+
+\subsubsection{Multilayer perception (MLP)}
+\label{subsect:MLP}
+
 
 \section{Methods}
 \section{Results}
 \section{Conclusion}
 \appendix
 \section{Appendix}
-\label{sect:appendix}
+\label{sect:Appendix}
 Link to GitHub repository:\\
 \url{https://github.com/krilangs/FYS-STK4155/tree/master/Project2}
 
