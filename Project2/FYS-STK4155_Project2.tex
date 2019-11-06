@@ -57,7 +57,8 @@ First we will look at the data sets to be evaluated in this project. This includ
 \section{Data}
 \label{sect:Data}
 \subsection{Classification: Credit Card Data}
-The classification analysis in this project is of the Taiwan default payments credit card data downloaded from the UCI \cite{UCI} as an .xls file. The outcome of the default payment is binary as (YES=1, NO=0). The original data set contains 30 000 data points with 23 explanatory variables (24 with the output):
+\label{subsect:credit_data}
+The classification analysis in this project is of the Taiwan default payments credit card data downloaded from the UCI \cite{UCI} as an .xls file. The outcome of the default payment is binary as (YES=1, NO=0). The original data set contains 30 000 number of instances (720 000 data points) with 23 explanatory variables/attributes (24 with the output):
 \begin{enumerate}
 	\item X1: Amount of the given credit (NT dollar): it includes both the individual consumer credit and his/her family (supplementary) credit. 
 	\item X2: Gender (1 = male; 2 = female). 
@@ -71,6 +72,7 @@ The classification analysis in this project is of the Taiwan default payments cr
 By analysis of the data set; there are errors that have to be taken into consideration where there are values that does not correspond to the values that should be given from the variables description.
 
 \subsection{Regression: Franke's function}
+\label{subsect:franke_data}
 The regression analysis in this project we evaluate the two-dimensional Frank function which is defined as:
 \begin{align}
 \label{eq:Franke_func}
@@ -116,7 +118,7 @@ In logistic regression we use linear regression in $x$ to model the posterior pr
 \label{eq:sigmoid}
 p(\textbf{x})=\frac{e^{\hat{\beta}\textbf{x}}}{1+e^{\hat{\beta}\textbf{x}}},
 \end{equation}
-where $\hat{\beta}=[\beta_0,\beta_1,...,\beta_p]$ are the weights/predictors we want to extract from the data and $\textbf{x}=[1,x_1,x_2,...,x_p]$. The probabilities for the binary case have the following relation:
+where $\hat{\beta}=[\beta_0,\beta_1,...,\beta_p]$ are the weights/predictors we want to extract from the data and $\textbf{x}=[1,x_1,x_2,...,x_p]$ is the design matrix. The probabilities for the binary case have the following relation:
 \begin{equation*}
 p(y_i=0|x_i,\hat{\beta})=1-p(y_i=1|x_i,\hat{\beta})
 \end{equation*}
@@ -180,7 +182,7 @@ The minimization for this cost function is
 For the regression problem the cost function is the MSE (eq. \ref{eq:MSE}), while for the classification problem the cost function is the cross-entropy (eq. \ref{eq:cost_func_rewritten}).
 
 \subsection{Gradient Descent (GD)}
-\label{sect: GD}
+\label{sect:GD}
 As stated in the cost function section (\ref{subsect:Cost_func}), we will use gradient descent methods to optimize the cost function by its minimum. In GD the $\hat{\alpha}$ parameters are adjusted iteratively to the largest negative value of the gradient for a given number of iterations or until a given tolerance is reached. This is calculated as
 \begin{equation}
 \label{eq:GD_general}
@@ -189,13 +191,13 @@ As stated in the cost function section (\ref{subsect:Cost_func}), we will use gr
 where $\gamma$ is a learning rate parameter which acts as a hyperparameter for controlling the step length. Since the cost function is to be optimized with optimal $\hat{\alpha}_{\text{opt}}$ parameters, then there is an optimal $\gamma_{\text{opt}}$ value. If $\gamma<\gamma_{\text{opt}}$, then the GD may take a long time or not even converge within the time frame or for the given number of iterations. If $\gamma>\gamma_{\text{opt}}$, then the GD may not find the minimum value/$\hat{\alpha}_{\text{opt}}$ that we want.
 
 For logistic regression (LR) we have $\hat{\alpha}=\hat{\beta}$, such that the optimal $\hat{\beta}_{\text{opt}}$ values becomes
-\begin{equation}
+\begin{equation*}
 \label{eq:GD}
 \hat{\beta}_{\text{opt}}^{(n+1)}=\hat{\beta}_{\text{opt}}^{(n)}-\frac{\partial \mathcal{C}(\hat{\beta}^{(n)})}{\partial \hat{\beta}}\left[\frac{\partial^2 \mathcal{C}(\hat{\beta}^{(n)})}{\partial \hat{\beta}\partial \hat{\beta}^T}\right]^{-1}=\hat{\beta}^{(n)}_{\text{opt}}-\gamma\frac{\partial \mathcal{C}(\hat{\beta}^{(n)})}{\partial \hat{\beta}},
-\end{equation}
+\end{equation*}
 which can be rewritten to
 \begin{equation}
-\label{eq:GD_opt}
+\label{eq:GD_LR}
 \hat{\beta}_{\text{opt}}^{(n+1)}=\hat{\beta}_{\text{opt}}^{(n)}-(\textbf{X}^T\textbf{W}\textbf{X})^{-1}(\textbf{X}^T(\textbf{p}-\textbf{y}))=\hat{\beta}_{\text{opt}}^{(n)}-\gamma(\textbf{X}^T(\textbf{p}-\textbf{y})).
 \end{equation}
 
@@ -252,9 +254,22 @@ For the back propagation through the hidden layers, $l=L-1,L-2,...,2$, the back 
 W_{jk}^l&\leftarrow W_{jk}^l-\gamma\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial W_{jk}^l}= W_{jk}^l -\gamma \delta_j^la_k^{l-1} \\
 b^l_j&\leftarrow b^l_j-\gamma\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial b_j^l}=b^l_j-\gamma\delta_j^l
 \end{align*}
-The parameter $\gamma$ is a learning rate parameter as in the gradient descent section (\ref{sect: GD}). From these equations it is clear that they the cost function $\mathcal{C}$ and the activation function $f(\textbf{z})$ should be differentiable. With this we calculate the optimal If the learning rate is 
+The parameter $\gamma$ is a learning rate parameter as in the gradient descent section (\ref{sect: GD}). From these equations it is clear that they the cost function $\mathcal{C}$ and the activation function $f(\textbf{z})$ should be differentiable.
 
 \section{Methods}
+Start by first downloading the credit card data from the UCI Machine Learning Repository \cite{UCI} as an Excel file "\textit{default of credit card clients.xls}". The credit card data set is explained in the Data section \ref{subsect:credit_data}. The data set contains values that don't correspond to the given value explanations in the Data section. For the ID's in the data set that has these values that don't fit in, we simply exclude them from the analysis. Then we split the remaining data into training and test sets. These new data are then preprocessed and scaled using Scikit-Learn functions in Python. After scaling then the preprocessed data are stored separately for training and test data as "\textit{.npz}" files, and exported to the Data folder.
+
+Now we start making the Logistic Regression code. The aim for this code is to reproduce the LR analysis in the scientific report by \citet{origarticle}. Since this is a classification problem we use the cross-entropy in equation \ref{eq:cost_func_rewritten} as the cost function. We use the stochastic gradient descent in equation \ref{eq:GD_LR} with mini-batches, which is explained in section \ref{sect:GD}, to calculate the optimal parameters $\hat{\beta}$ for the given cost function. These parameters are then stored, and used to produce the cumulative number of target data as function of number of data for the best theoretical curve, modeled curves for default and not default payment and the diagonal baseline curve to be plotted. With this we also calculate the area ratio for the two model cases and the error ratio. The best model is when the model curve is close to the best curve, which is greater than the baseline \cite{origarticle}. We also calculate the accuracy score in equation \ref{eq:accuracy_score} which we compare with scikit-learn.
+MULIG MER!!!!!!
+
+Next is to create the neural network (NN) code with multilayer perceptron network (MLP) and back propagation, which is explained in section \ref{sect:NN}. For this case we train the network to find the optimal weights and biases in the cost function in equation \ref{eq:cost_MLP} with the sigmoid (eq. \ref{eq:sigmoid}) activation function. We also test different regularization parameters and learning rates to find the optimal accuracy score. After training the network we compare our results with the results from the LR code and the NN analysis in the scientific report \cite{origarticle}. (We also test with scikit-learn and tensorflow.) 
+MULIG MER!!!!!!
+
+Next we will use the NN code on a regression case for fitting the Franke function data in equation \ref{eq:Franke_func} section \ref{subsect:franke_data}. Now the cost function is the mean squared error (MSE) in equation \ref{eq:MSE}, and we calculate the $R^2$ score in equation \ref{eq:R2_score}. Once again we find the best regularization and learning rate parameters to calculate the parameters $\hat{\beta}$ using stochastic gradient descent in equation \ref{eq:GD_OLS}. We will now compare our NN regression results with the results obtained in project 1 \cite{proj1}. We also compare the results with scikit-learn/tensorflow.
+MULIG MER!!!!!!
+
+After all the calculations and results, we summarize and evaluate the algorithms used to find out which is best for the classification case, and which is best for the regression case.
+
 \section{Results}
 \section{Conclusion}
 \appendix
