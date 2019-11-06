@@ -100,7 +100,7 @@ with model $\tilde{\textbf{y}}$ and the mean value, $\bar{y}$, of the data \text
 For the classification we will measure the performance of the model with the accuracy score as
 \begin{equation}
 \label{eq:accuracy_score}
-Accuracy=\frac{\sum_{i=1}^{n}I(t_i=y_i)}{n}
+\text{Accuracy}=\frac{\sum_{i=1}^{n}I(t_i=y_i)}{n},
 \end{equation}
 with target $t_i$, model output $y_i$, number of targets $n$ and indicator function $I$ as
 \[I=\begin{cases}
@@ -114,9 +114,9 @@ The optimal accuracy score is 1.
 In logistic regression we use linear regression in $x$ to model the posterior probabilities with sums in the domain [0,1]. Logistic regression is what is called a soft classifier. This means that it outputs the probability of a given category. For our case with logistic regression, the output is a binary case which gives either 1 if the credit card user could default the credit card debt or 0 if not. The probability that a data point $x_i$ belongs to a specific category $y_i$ can be represented by the likelihood given by the logistic (Sigmoid) function as
 \begin{equation}
 \label{eq:sigmoid}
-p(\hat{x})=\frac{e^{\hat{\beta}\hat{x}}}{1+e^{\hat{\beta}\hat{x}}},
+p(\textbf{x})=\frac{e^{\hat{\beta}\textbf{x}}}{1+e^{\hat{\beta}\textbf{x}}},
 \end{equation}
-where $\hat{\beta}$ are the weights/predictors we want to extract from the data. The probabilities for the binary case have the following relation:
+where $\hat{\beta}=[\beta_0,\beta_1,...,\beta_p]$ are the weights/predictors we want to extract from the data and $\textbf{x}=[1,x_1,x_2,...,x_p]$. The probabilities for the binary case have the following relation:
 \begin{equation*}
 p(y_i=0|x_i,\hat{\beta})=1-p(y_i=1|x_i,\hat{\beta})
 \end{equation*}
@@ -131,50 +131,128 @@ P(\mathcal{D}|\hat{\beta})=\prod_{i=1}^{n}\left[p(y_i=1|x_i,\hat{\beta})\right]^
 From this likelihood we get the log-likelihood as:
 \begin{equation}
 \label{eq:log_likelihood}
-P_{\log }(\hat{\beta})=\log[P(\mathcal{D}|\hat{\beta})]=\sum_{i=1}^{n}\left(y_i\log[P(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-P(y_i=1|x_i,\hat{\beta})]\right)
+P_{\log }(\hat{\beta})=\log[P(\mathcal{D}|\hat{\beta})]=\sum_{i=1}^{n}\left(y_i\log[p(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-p(y_i=1|x_i,\hat{\beta})]\right)
 \end{equation}
 
 \subsubsection{Cost function/cross-entropy}
 \label{subsect:Cost_func}
-Define the cost function as the negative of the log-likelihood as 
+For the classification problem we define the cost function as the negative of the log-likelihood as 
 \begin{align}
 \label{eq:cost_func}
-\mathcal{C}(\hat{\beta})=-P_{\log }(\hat{\beta})= -\sum_{i=1}^{n}\left(y_i\log[P(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-P(y_i=1|x_i,\hat{\beta})]\right).
+\mathcal{C}(\hat{\beta})=-P_{\log }(\hat{\beta})= -\sum_{i=1}^{n}\left(y_i\log[p(y_i=1|x_i,\hat{\beta})]+(1-y_i)\log[1-p(y_i=1|x_i,\hat{\beta})]\right).
 \end{align}
 Maximization of the log-likelihood is then the same as minimizing the cost function. In statistics the cost function is also called the cross-entropy. Rewriting of the cost function (eq. \ref{eq:cost_func}) the leads to:
 \begin{equation}
 \label{eq:cost_func_rewritten}
-\mathcal{C}(\hat{\beta})=-\sum_{i=1}^{n}\left(y_i(\beta_0+\beta_1x_i)-\log(1+e^{\beta_0+\beta_1x_i}\right).
+\mathcal{C}(\hat{\beta})=-\sum_{i=1}^{n}\left(y_i(\textbf{x}_{i*}\hat{\beta})-\log(1+e^{\textbf{x}_{i*}\hat{\beta}})\right).
 \end{equation}
 
-The $\hat{\beta}$ parameters are found through minimization of the cost function by taking the derivative of the cost function (eq. \ref{eq:cost_func_rewritten}) with respect to the $\hat{\beta}$ values. Define vector $\hat{y}\in\mathcal{R}^n$ for $n$ elements $y_i$, matrix $\hat{X}\in\mathcal{R}^{n\times p}$ with $x_i$ values and vector $\hat{p}\in\mathcal{R}^n$ for fitted probabilities $p(y_i|x_i,\hat{\beta})$ with non-linear dependence on $\hat{\beta}$. The minimized cost function becomes
+The $\hat{\beta}$ parameters are found through minimization of the cost function by taking the derivative of the cost function (eq. \ref{eq:cost_func_rewritten}) with respect to the $\hat{\beta}$ values. Define vector $\textbf{y}\in\mathcal{R}^n$ for $n$ elements $y_i$, matrix $\textbf{X}\in\mathcal{R}^{n\times p}$ with $x_i$ values and vector $\textbf{p}\in\mathcal{R}^n$ for fitted probabilities $p(y_i|x_i,\hat{\beta})$ with non-linear dependence on $\hat{\beta}$. The minimized cost function becomes
 \begin{equation}
 \label{eq:min_cost_func}
-\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}}=-\hat{X}^T(\hat{y}-\hat{p}).
+\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}}=-\textbf{X}^T(\textbf{y}-\textbf{p}).
 \end{equation}
-This gives set of linear equations to solve the system for $\hat{\beta}$. Define diagonal matrix $\hat{W}$ with elements $p(y_i|x_i,\hat{\beta})(1-p(y_i|x_i,\hat{\beta}))$. The second derivative of the cost function, also called the Hessian matrix, is then in compact form:
+This gives set of linear equations to solve the system for $\hat{\beta}$. Define diagonal matrix \textbf{W} with elements $p(y_i|x_i,\hat{\beta})(1-p(y_i|x_i,\hat{\beta}))$. The second derivative of the cost function, also called the Hessian matrix, is then in compact form:
 \begin{equation}
 \label{eq:Hessian}
-\frac{\partial^2 \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}\partial \hat{\beta}^T}=\hat{X}^T\hat{W}\hat{X}.
+\frac{\partial^2 \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}\partial \hat{\beta}^T}=\textbf{X}^T\textbf{W}\textbf{X}.
 \end{equation}
 
 The resulting equation of minimization of the cost function is non-linear, and have to be solved using minimization algorithms called gradient descent methods.
 
+For the multilayer perceptron (MLP) (sect. \ref{subsect:MLP}), the cost function can be rewritten in terms of the weights $\textbf{W}$, biases $\textbf{b}$ and activation function $f(\textbf{z})$ as
+\begin{equation}
+\label{eq:cost_MLP}
+\mathcal{C}(\textbf{W},\textbf{b})=-\sum_{j=1}^{n}t_j\log(p(y_j|z_j))+(1-t_j)\log(p(y_j|z_j)).
+\end{equation}
+
+For the regression problem the cost function is defined as the mean squared error (MSE)
+\begin{equation}
+\label{eq:MSE}
+\mathcal{C}(\hat{\beta})=MSE(\hat{\beta})=\frac{1}{n}\sum_{i=1}^{n}(y_i-\textbf{x}_{i*}\hat{\beta})^2.
+\end{equation}
+The minimization for this cost function is
+\begin{equation}
+\label{eq:MSE_deriv}
+\frac{\partial \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}}=-\frac{2}{n}\textbf{X}^T(\textbf{y}-\textbf{x}\hat{\beta}).
+\end{equation}
+
+For the regression problem the cost function is the MSE (eq. \ref{eq:MSE}), while for the classification problem the cost function is the cross-entropy (eq. \ref{eq:cost_func_rewritten}).
+
 \subsection{Gradient Descent (GD)}
 \label{sect: GD}
-...
+As stated in the cost function section (\ref{subsect:Cost_func}), we will use gradient descent methods to optimize the cost function by its minimum. In GD the $\hat{\alpha}$ parameters are adjusted iteratively to the largest negative value of the gradient for a given number of iterations or until a given tolerance is reached. This is calculated as
+\begin{equation}
+\label{eq:GD_general}
+\hat{\alpha}^{(n+1)}=\hat{\alpha}^{(n)}-\gamma\nabla_{\hat{\alpha}} \mathcal{C}(\hat{\alpha}^{(n)}),
+\end{equation}
+where $\gamma$ is a learning rate parameter which acts as a hyperparameter for controlling the step length. Since the cost function is to be optimized with optimal $\hat{\alpha}_{\text{opt}}$ parameters, then there is an optimal $\gamma_{\text{opt}}$ value. If $\gamma<\gamma_{\text{opt}}$, then the GD may take a long time or not even converge within the time frame or for the given number of iterations. If $\gamma>\gamma_{\text{opt}}$, then the GD may not find the minimum value/$\hat{\alpha}_{\text{opt}}$ that we want.
+
+For logistic regression (LR) we have $\hat{\alpha}=\hat{\beta}$, such that the optimal $\hat{\beta}_{\text{opt}}$ values becomes
+\begin{equation}
+\label{eq:GD}
+\hat{\beta}_{\text{opt}}^{(n+1)}=\hat{\beta}_{\text{opt}}^{(n)}-\frac{\partial \mathcal{C}(\hat{\beta}^{(n)})}{\partial \hat{\beta}}\left[\frac{\partial^2 \mathcal{C}(\hat{\beta}^{(n)})}{\partial \hat{\beta}\partial \hat{\beta}^T}\right]^{-1}=\hat{\beta}^{(n)}_{\text{opt}}-\gamma\frac{\partial \mathcal{C}(\hat{\beta}^{(n)})}{\partial \hat{\beta}},
+\end{equation}
+which can be rewritten to
+\begin{equation}
+\label{eq:GD_opt}
+\hat{\beta}_{\text{opt}}^{(n+1)}=\hat{\beta}_{\text{opt}}^{(n)}-(\textbf{X}^T\textbf{W}\textbf{X})^{-1}(\textbf{X}^T(\textbf{p}-\textbf{y}))=\hat{\beta}_{\text{opt}}^{(n)}-\gamma(\textbf{X}^T(\textbf{p}-\textbf{y})).
+\end{equation}
+
+For the MLP (sect. \ref{subsect:MLP}) we have the parameter $\hat{\alpha}$ as the weights \textbf{W} and biases \textbf{b}.
+
+For regression and ordinary least square (OLS) we have $\hat{\alpha}=\hat{\beta}$, which gives
+\begin{equation}
+\label{eq:GD_OLS}
+\hat{\beta}_{\text{OLS}}^{(n+1)}=\hat{\beta}_{\text{OLS}}^{(n)}-(\textbf{X}^T\textbf{X})^{-1}(\textbf{X}^T(\textbf{x}\hat{\beta}^{(n)}-\textbf{y})).
+\end{equation}
+
+Some important things to notice about the standard GD is that; it is sensitive to initial conditions $\hat{\beta}^{(0)}_{\text{opt}}$ and choices of learning rates, it treats all directions in the parameter space uniformly, it can misinterpret a local minimum as a global minimum and normally the gradient is computationally expensive to calculate for large datasets. To improve the calculations we introduce another gradient descent method; stochastic gradient descent (STD) with mini-batches...
+
 \subsection{Neural Networks (NN)}
 \label{sect:NN}
-Neural networks are computational models that are supposed to mimic biological systems, and they consist of layers of nodes that are connected. Neural networks can be used in both regression and classification problems. Neural networks have, as seen in Figure \ref{fig:Neural_network}, an input layer, a hidden layer and an output layer. This is a simple case with two input variables/nodes, one hidden layer with 4 nodes and one node in the output layer. Neural networks can contain many hidden layers, and the number of nodes in each layer have to be decided by us. The input and output layers contain as many nodes as there are input and output variables. The number of output variables vary depending on the problem. From the figure we see that the input variables are sent to the hidden layer nodes where they are processed with an activation function before sent to the output layer as our result. The connection between the nodes are affected by weight variables $w$.
+Neural networks are computational models that are supposed to mimic biological systems, and they consist of layers of nodes that are connected. Neural networks can be used in both regression and classification problems. Neural networks have, as seen in Figure \ref{fig:Neural_network}, an input layer, a hidden layer and an output layer. This is a simple case with two input variables/nodes, one hidden layer with 4 nodes and one node in the output layer. Neural networks can contain many hidden layers, and the number of nodes in each layer have to be decided by us and may vary from layer to layer. The input and output layers contain as many nodes as there are input and output variables respectively. The number of output variables vary depending on the problem and may differ from the number of input variables. From the figure we see that the input variables are sent to the hidden layer nodes where they are processed with an activation function before sent to the output layer. The connection between the nodes are affected by weight variables $w$ which gives weighted sums to be passed through the activation function. The outputted weighted sum have to pass a certain threshold to not give zero output.
 
 \begin{figure}[htbp]
 	\centering\includegraphics[width=0.3\linewidth]{Neural_network.png}
 	\caption{Schematic diagram of a simple single hidden layer, feed-forward neural network with two input nodes, four nodes in the single hidden layer and one output node.\label{fig:Neural_network}}
 \end{figure} 
 
-\subsubsection{Multilayer perception (MLP)}
+\subsubsection{Multilayer perceptron (MLP)}
 \label{subsect:MLP}
+Figure \ref{fig:Neural_network} shows a feed-forward neural network (FFNN) where the information only moves in one direction through the layers, as seen by the arrows. If all the nodes in a layer is connected to all the other nodes in the next layer, we call it a fully-connected FFNN. When there are three or more layers in the network with non-linear activation function on the nodes, then we call the network a multilayer perceptron (MLP).
 
+The output \textbf{y} is produced with the activation function $f(\textbf{z})$ as
+\[\textbf{y}=f(\textbf{Wx}+\textbf{b}),\]
+with the activation 
+\[\textbf{z}=\textbf{Wx}+\textbf{b},\]
+where \textbf{W} are the weights, \textbf{x} are the inputs and \textbf{b} are biases in the nodes. The activation for the $i$-th node in the $l$-th layer is given as
+\[z_i^l=\sum_{j=1}^{M}W^l_{ij}x_j+b_i,\]
+with $M$ the number of possible inputs in node $i$ in layer $l$. The output of all the nodes in the $l$-th layer is
+\[y_i^l=f^l\left(\sum_{j=1}^{N_{l-1}}W_{ij}^ly_j^{l-1}+b_i^l\right),\]
+with $N_l$ the number of nodes in layer $l$.
+
+\subsubsection{Back propagation}
+\label{subsect:back_prop}
+The weights and biases have to be optimized to decrease the error. This leads to the back propagation algorithm. The optimization is done by minimizing the cost function $C$ with respect to the weights and biases at the output layer $l=L$:
+\begin{align*}
+\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial W^L_{jk}}&=\begin{cases*}
+f^{\prime}(z^L_j)a_k^{L-1}(a^L_j-t_j), \text{ for Regression}\\
+f^{\prime}(z^L_j)a_k^{L-1}\frac{a^L_j-t_j}{a^L_j(1-a^L_j)}, \text{ for Classification}
+\end{cases*}\\
+\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial b^L_{j}}&=\delta_j^L
+\end{align*}
+$t_j$ are the targets as in the accuracy score equation \ref{eq:accuracy_score}. The output error $\delta^L$ is defined as:
+\begin{equation*}
+\delta_j^L=f^{\prime}(z^L_j)\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial a^L_j}
+\end{equation*}
+For the back propagation through the hidden layers, $l=L-1,L-2,...,2$, the back propagation error is computed before the weights and biases are updated at each layer:
+\begin{align*}
+\delta_j^l&=\sum_{k}\delta_k^{l+1}W_{kj}^{l+1}f^{\prime}(z^l_j)\\
+W_{jk}^l&\leftarrow W_{jk}^l-\gamma\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial W_{jk}^l}= W_{jk}^l -\gamma \delta_j^la_k^{l-1} \\
+b^l_j&\leftarrow b^l_j-\gamma\frac{\partial \mathcal{C}(\textbf{W},\textbf{b})}{\partial b_j^l}=b^l_j-\gamma\delta_j^l
+\end{align*}
+The parameter $\gamma$ is a learning rate parameter as in the gradient descent section (\ref{sect: GD}). From these equations it is clear that they the cost function $\mathcal{C}$ and the activation function $f(\textbf{z})$ should be differentiable. With this we calculate the optimal If the learning rate is 
 
 \section{Methods}
 \section{Results}
