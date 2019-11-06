@@ -207,7 +207,7 @@ For regression and ordinary least square (OLS) we have $\hat{\alpha}=\hat{\beta}
 \hat{\beta}_{\text{OLS}}^{(n+1)}=\hat{\beta}_{\text{OLS}}^{(n)}-(\textbf{X}^T\textbf{X})^{-1}(\textbf{X}^T(\textbf{x}\hat{\beta}^{(n)}-\textbf{y})).
 \end{equation}
 
-Some important things to notice about the standard GD is that; it is sensitive to initial conditions $\hat{\beta}^{(0)}_{\text{opt}}$ and choices of learning rates, it treats all directions in the parameter space uniformly, it can misinterpret a local minimum as a global minimum and normally the gradient is computationally expensive to calculate for large datasets. To improve the calculations we introduce another gradient descent method; stochastic gradient descent (STD) with mini-batches...
+Some important things to notice about the standard GD is that; it is sensitive to initial conditions $\hat{\beta}^{(0)}_{\text{opt}}$ and choices of learning rates, it treats all directions in the parameter space uniformly, it can misinterpret a local minimum as a global minimum and normally the gradient is computationally expensive to calculate for large datasets. To improve the calculations we introduce another gradient descent method; stochastic gradient descent (STD) with mini-batches. The mini-batches are a subset of the data to take the gradient on. So use stochasticity on the gradient descent on randomly picked mini-batches with sizes $M$. This gives a chance that to not use the entire dataset, and the stochasticity can increase the possibility of finding the global minimum and not a local minimum. For $n$ data points there will be $n/M$ mini-batches, which are denoted by $B_k$ with $k=0,1,...,n/M$.
 
 \subsection{Neural Networks (NN)}
 \label{sect:NN}
