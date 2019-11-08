@@ -1,0 +1,32 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+
+[packages]
+numpy = "*"
+matplotlib = "*"
+scikit-learn = "*"
+tensorflow = "*"
+pandas = "*"
+jupyter = "*"
+ipykernel = "*"
+xlrd = "*"
+autograd = "*"
+imblearn = "*"
+numba = "*"
+line-profiler = "*"
+pyqt5 = "*"
+scikit-plot = "*"
+joblib = "*"
+pytest = "*"
+scipy = "*"
+pipfile = "*"
+dask = "*"
+tqdm = "*"
+
+[requires]
+python_version = "3.7"
