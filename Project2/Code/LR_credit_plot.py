@@ -64,12 +64,12 @@ area_1 = scint.simps(gains_1, x) - area_baseline
 ratio_not_default = area_0 / area_best
 ratio_default = area_1 / area_best
 
-print(f"Area ratio for predicting not default: {ratio_not_default}\n"
-      + f"Area ratio for predicting default: {ratio_default} \n"
-      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test)} \n"
-      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train)} \n"
-      + f"Accuracy score test: {model.accuracy_score(X_test, y_test)} \n"
-      + f"Accuracy score train: {model.accuracy_score(X_train, y_train)}")
+print(f"Area ratio for predicting not default: {ratio_not_default:.6f}\n"
+      + f"Area ratio for predicting default: {ratio_default:.6f} \n"
+      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test):.6f} \n"
+      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train):.6f} \n"
+      + f"Accuracy score test: {model.accuracy_score(X_test, y_test):.6f} \n"
+      + f"Accuracy score train: {model.accuracy_score(X_train, y_train):.6f}")
 
 
 df = pd.read_csv("Data/train_credit_LR.csv", header=None, skiprows=1).T

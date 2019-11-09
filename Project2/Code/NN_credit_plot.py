@@ -7,7 +7,6 @@ import scipy.integrate as scint
 
 from main import MLPClassifier
 
-
 fonts = {"font.family": "serif", "axes.labelsize": 8, "font.size": 8,
          "legend.fontsize": 8, "xtick.labelsize": 8, "ytick.labelsize": 8,
          "axes.titlesize": 8}
@@ -62,6 +61,13 @@ area_1 = scint.simps(gains_1, x) - area_baseline
 ratio_not_default = area_0/area_best
 ratio_default = area_1/area_best
 
+print(f"Area ratio for predicting not default: {ratio_not_default:.6f}\n"
+      + f"Area ratio for predicting default: {ratio_default:.6f}\n"
+      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test):.6f}\n"
+      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train):.6f} \n"
+      + f"Accuracy score test: {model.accuracy_score(X_test, y_test):.6f} \n"
+      + f"Accuracy score train: {model.accuracy_score(X_train, y_train):.6f}")
+
 df = pd.read_csv("Data/train_credit_NN.csv", header=None, skiprows=1).T
 
 df.columns = df.iloc[0]
@@ -76,14 +82,17 @@ lambdas = df["param_lambd"].values.astype(np.float)
 best_learning_rate = learning_rates[validation_score == np.max(validation_score)][0]
 best_lambda = lambdas[validation_score == np.max(validation_score)][0]
 
+print(f"Best lambda: {best_lambda:e}\n"
+      + f"Best learning rate: {best_learning_rate:e}")
+
 fig, ax = plt.subplots()
 fig.set_size_inches(3.03, 3.03)
 plt.title("Learning rate and regularization\n accuracy:\n Neural Network - Classification")
 ax.scatter(learning_rates, lambdas, c=validation_score, s=20, cmap=cm.coolwarm)
 ax.set_xlabel(r"Learning rate $\eta$")
 ax.set_ylabel(r"Shrinkage parameter $\lambda$")
-ax.set_xlim([np.min(learning_rates) * 0.9, np.max(learning_rates) * 1.1])
-ax.set_ylim([np.min(lambdas) * 0.9, np.max(lambdas) * 1.1])
+ax.set_xlim([np.min(learning_rates)*0.9, np.max(learning_rates)*1.1])
+ax.set_ylim([np.min(lambdas)*0.9, np.max(lambdas)*1.1])
 ax.set_yscale("log")
 ax.set_xscale("log")
 cbar = fig.colorbar(cm.ScalarMappable(norm=cm.colors.Normalize(
@@ -93,13 +102,3 @@ cbar.set_label("Validation accuracy")
 fig.tight_layout()
 fig.savefig("Figures/nn_learning_rate_lambda_accuracy_credit.png", dpi=1000)
 fig.clf()
-
-
-print(f"Area ratio for predicting not default: {ratio_not_default}.\n"
-      + f"Area ratio for predicting default: {ratio_default}")
-print(f"Error rate test: {1 - model.accuracy_score(X_test, y_test)}.\n"
-      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train)} \n"
-      + f"Accuracy score test: {model.accuracy_score(X_test, y_test)} \n"
-      + f"Accuracy score train: {model.accuracy_score(X_train, y_train)}")
-print(f"Best lambda: {best_lambda:g}\n"
-      + f"Best learning rate: {best_learning_rate:g}")

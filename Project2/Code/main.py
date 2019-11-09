@@ -1,3 +1,4 @@
+from __future__ import division
 import scipy.stats
 import numpy as np
 import scipy.special as sps

@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-import scikitplot as skplt
 
 from mpl_toolkits.mplot3d import Axes3D
 from main import MLPRegressor
@@ -51,7 +50,7 @@ y_pred_test = model.predict(X_test)
 fig = plt.figure()
 fig.set_size_inches(3.03, 3.03)
 ax = fig.gca(projection="3d")
-plt.title("3D Franke function: Test data")
+plt.title(f"3D Franke function: Test data\n $n_x=${nx}, $n_y$={ny}, $\\sigma$={sigma}")
 surf = ax.plot_surface(x_meshgrid, y_meshgrid, z_meshgrid,
                        cmap=matplotlib.cm.coolwarm, linewidth=0,
                        antialiased=False, alpha=0.5)
@@ -59,6 +58,7 @@ surf = ax.plot_surface(x_meshgrid, y_meshgrid, z_meshgrid,
 ax.scatter(scaler.inverse_transform(X_test)[:,0], scaler.inverse_transform(X_test)[:,1],
            y_pred_test, marker=".", s=7, label="test")
 
+ax.view_init(elev=20, azim=80)
 ax.axis("off")
 ax.grid(False)
 ax.set_frame_on(False)
@@ -68,7 +68,7 @@ fig.savefig(f"Figures/3dplot_test_{nx}_{ny}_{sigma}.png", bbox_inches="tight",
 fig = plt.figure()
 fig.set_size_inches(3.03, 3.03)
 ax = fig.gca(projection="3d")
-plt.title("3D Franke function: Train data")
+plt.title(f"3D Franke function: Train data\n $n_x=${nx}, $n_y$={ny}, $\\sigma$={sigma}")
 surf = ax.plot_surface(x_meshgrid, y_meshgrid, z_meshgrid,
                        cmap=matplotlib.cm.coolwarm, linewidth=0,
                        antialiased=False, alpha=0.5)
@@ -76,6 +76,7 @@ surf = ax.plot_surface(x_meshgrid, y_meshgrid, z_meshgrid,
 ax.scatter(scaler.inverse_transform(X_train)[:,0], scaler.inverse_transform(X_train)[:,1],
            y_pred_train, marker=".", s=7, label="train")
 
+ax.view_init(elev=20, azim=80)
 ax.axis("off")
 ax.grid(False)
 ax.set_frame_on(False)
@@ -100,9 +101,9 @@ lambdas = df["param_lambd"].values.astype(np.float)
 best_learning_rate = learning_rates[validation_score == np.max(validation_score)][0]
 best_lambda = lambdas[validation_score == np.max(validation_score)][0]
 
-print(f"R2 score test: {model.r2_score(X_test, z_test)}.\n"
-      + f"R2 score train: {model.r2_score(X_train, z_train)}")
-print(f"Best lambda: {best_lambda:g}\n"
+print(f"R2 score test: {model.r2_score(X_test, z_test):.6f}.\n"
+      + f"R2 score train: {model.r2_score(X_train, z_train):.6f}")
+print(f"Best lambda: {best_lambda:e}\n"
       + f"Best learning rate: {best_learning_rate:e}")
 
 fig, ax = plt.subplots()
@@ -111,8 +112,8 @@ plt.title("Learning rate and regularization\n accuracy:\n Neural Network - Regre
 ax.scatter(learning_rates, lambdas, c=validation_score, s=20, cmap=cm.coolwarm)
 ax.set_xlabel(r"Learning rate $\eta$")
 ax.set_ylabel(r"Shrinkage parameter $\lambda$")
-ax.set_xlim([np.min(learning_rates) * 0.9, np.max(learning_rates) * 1.1])
-ax.set_ylim([np.min(lambdas) * 0.9, np.max(lambdas) * 1.1])
+ax.set_xlim([np.min(learning_rates)*0.9, np.max(learning_rates)*1.1])
+ax.set_ylim([np.min(lambdas)*0.9, np.max(lambdas)*1.1])
 ax.set_yscale("log")
 ax.set_xscale("log")
 cbar = fig.colorbar(cm.ScalarMappable(norm=cm.colors.Normalize(

@@ -1,3 +1,4 @@
+from __future__ import division
 import sys
 import numpy as np
 import pandas as pd
@@ -32,7 +33,6 @@ def train_LR():
 
     df_LR = pd.DataFrame.from_dict(random_search_LR.cv_results_, orient="index")
     df_LR.to_csv("Data/train_credit_LR.csv")
-
 
 def train_MLP():
     MLP = MLPClassifier(n_epochs=300, batch_size="auto",
@@ -109,12 +109,8 @@ def train_reg(nx, ny, sigma):
 if __name__ == "__main__":
     try:
         train = str(sys.argv[1])
-        #if train == "Reg":
-        #    nx = int(sys.argv[2])
-        #    ny = int(sys.argv[3])
-        #    sigma = int(sys.argv[4])
     except IndexError:
-        raise IndexError(f"Input the desired function to training data")
+        raise IndexError("Input the desired function to training data")
     except ValueError:
         raise TypeError("Input must be string; LR, MLP or Reg")
 
@@ -125,6 +121,9 @@ if __name__ == "__main__":
         print("Training MLP")
         train_MLP()
     elif train == "Reg":
+        nx = int(sys.argv[2])
+        ny = int(sys.argv[3])
+        sigma = float(sys.argv[4])
         print("Training Reg")
         train_reg(nx, ny, sigma)
     else:
