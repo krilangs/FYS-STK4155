@@ -34,33 +34,33 @@ def train_LR():
     df_LR = pd.DataFrame.from_dict(random_search_LR.cv_results_, orient="index")
     df_LR.to_csv("Data/train_credit_LR.csv")
 
-def train_MLP():
-    MLP = MLPClassifier(n_epochs=300, batch_size="auto",
+def train_NN():
+    NN = MLPClassifier(n_epochs=300, batch_size="auto",
                         hidden_layer_size=[100, 50], rtol=1e-2)
 
     learning_rates = log_uniform(-3, -1)
     lambdas = log_uniform(-10, 0)
-    param_dist_MLP = {"learning_rate": learning_rates, "lambd": lambdas}
+    param_dist_NN = {"learning_rate": learning_rates, "lambd": lambdas}
 
     # Use Randomized search for hyperparameters
-    random_search_MLP = RandomizedSearchCV(MLP, param_distributions=param_dist_MLP,
+    random_search_NN = RandomizedSearchCV(NN, param_distributions=param_dist_NN,
                                       n_iter=100, n_jobs=-1, iid=False, cv=5,
                                       verbose=True, error_score=0,
                                       return_train_score=True)
 
     # Fit the trained data
-    random_search_MLP.fit(X_train, y_train)
+    random_search_NN.fit(X_train, y_train)
 
     # Export the trained data
-    random_search_MLP.best_estimator_.save_model("NN_credit_model.npz")
+    random_search_NN.best_estimator_.save_model("NN_credit_model.npz")
 
-    df_MLP = pd.DataFrame.from_dict(random_search_MLP.cv_results_, orient="index")
-    df_MLP.to_csv("Data/train_credit_NN.csv")
+    df_NN = pd.DataFrame.from_dict(random_search_NN.cv_results_, orient="index")
+    df_NN.to_csv("Data/train_credit_NN.csv")
 
 
 
 def train_reg(nx, ny, sigma):
-    def r2_scorer_fix_nan(regressor, X, y):
+    def r2_fix_nan(regressor, X, y):
         y_pred = regressor.predict(X)
         if np.any(np.isnan(y_pred)):
             return -1
@@ -72,30 +72,20 @@ def train_reg(nx, ny, sigma):
 
     X_train, z_train = train_set["X_train"], train_set["z_train"].reshape(-1, 1)
 
-    reg = MLPRegressor(
-            n_epochs=300,
-            batch_size="auto",
-            hidden_layer_size=[100, 50],
-            rtol=1e-2,
-            verbose=False,
-            activation_function_output="linear",)
+    reg = MLPRegressor(n_epochs=300, batch_size="auto",
+                       hidden_layer_size=[100, 50], rtol=1e-2, verbose=False,
+                       activation_function_output="linear")
 
     learning_rates = log_uniform(-5, -2)
     lambdas = log_uniform(-10, -1)
     param_dist_reg = {"learning_rate": learning_rates, "lambd": lambdas}
 
     # Use Randomized search for hyperparameters
-    random_search_reg = RandomizedSearchCV(
-            reg,
-            n_iter=100,
-            scoring=r2_scorer_fix_nan,
-            param_distributions=param_dist_reg,
-            cv=5,
-            iid=False,
-            n_jobs=-1,
-            verbose=True,
-            return_train_score=True,
-            error_score=np.nan)
+    random_search_reg = RandomizedSearchCV(reg, n_iter=100, scoring=r2_fix_nan,
+                                           param_distributions=param_dist_reg,
+                                           cv=5, iid=False, n_jobs=-1,
+                                           verbose=True, return_train_score=True,
+                                           error_score=np.nan)
 
     # Fit the trained data
     random_search_reg.fit(X_train, z_train)
@@ -112,19 +102,19 @@ if __name__ == "__main__":
     except IndexError:
         raise IndexError("Input the desired function to training data")
     except ValueError:
-        raise TypeError("Input must be string; LR, MLP or Reg")
+        raise TypeError("Input must be string; LR, NN or Reg")
 
     if train == "LR":
-        print("Training LR")
+        print("Training LR data")
         train_LR()
-    elif train == "MLP":
-        print("Training MLP")
-        train_MLP()
+    elif train == "NN":
+        print("Training NN data")
+        train_NN()
     elif train == "Reg":
+        print("Training Franke data")
         nx = int(sys.argv[2])
         ny = int(sys.argv[3])
         sigma = float(sys.argv[4])
-        print("Training Reg")
         train_reg(nx, ny, sigma)
     else:
         pass

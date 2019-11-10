@@ -7,12 +7,14 @@ import scipy.integrate as scint
 
 from main import MLPClassifier
 
+# Set font sizes for plotting
 fonts = {"font.family": "serif", "axes.labelsize": 8, "font.size": 8,
          "legend.fontsize": 8, "xtick.labelsize": 8, "ytick.labelsize": 8,
          "axes.titlesize": 8}
 
 plt.rcParams.update(fonts)
 
+# Import the data
 test_set = np.load("Data/credit_test.npz")
 train_set = np.load("Data/credit_train.npz")
 X_test, y_test = test_set["X_test"], test_set["y_test"].reshape(-1, 1)
@@ -47,7 +49,6 @@ fig.tight_layout()
 fig.savefig("Figures/cumulative_gain_NN.png", dpi=1000)
 fig.clf()
 
-
 area_baseline = 0.5
 area_best = scint.simps(gains_best, x) - area_baseline
 
@@ -60,13 +61,6 @@ area_1 = scint.simps(gains_1, x) - area_baseline
 
 ratio_not_default = area_0/area_best
 ratio_default = area_1/area_best
-
-print(f"Area ratio for predicting not default: {ratio_not_default:.6f}\n"
-      + f"Area ratio for predicting default: {ratio_default:.6f}\n"
-      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test):.6f}\n"
-      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train):.6f} \n"
-      + f"Accuracy score test: {model.accuracy_score(X_test, y_test):.6f} \n"
-      + f"Accuracy score train: {model.accuracy_score(X_train, y_train):.6f}")
 
 df = pd.read_csv("Data/train_credit_NN.csv", header=None, skiprows=1).T
 
@@ -82,15 +76,21 @@ lambdas = df["param_lambd"].values.astype(np.float)
 best_learning_rate = learning_rates[validation_score == np.max(validation_score)][0]
 best_lambda = lambdas[validation_score == np.max(validation_score)][0]
 
-print(f"Best lambda: {best_lambda:e}\n"
+print(f"Area ratio for predicting not default: {ratio_not_default:.6f}\n"
+      + f"Area ratio for predicting default: {ratio_default:.6f}\n"
+      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test):.6f}\n"
+      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train):.6f}\n"
+      + f"Accuracy score test: {model.accuracy_score(X_test, y_test):.6f}\n"
+      + f"Accuracy score train: {model.accuracy_score(X_train, y_train):.6f}\n"
+      + f"Best lambda: {best_lambda:e}\n"
       + f"Best learning rate: {best_learning_rate:e}")
 
 fig, ax = plt.subplots()
 fig.set_size_inches(3.03, 3.03)
 plt.title("Learning rate and regularization\n accuracy:\n Neural Network - Classification")
 ax.scatter(learning_rates, lambdas, c=validation_score, s=20, cmap=cm.coolwarm)
-ax.set_xlabel(r"Learning rate $\eta$")
-ax.set_ylabel(r"Shrinkage parameter $\lambda$")
+ax.set_xlabel(r"Learning rate $\gamma$")
+ax.set_ylabel(r"Regularization parameter $\lambda$")
 ax.set_xlim([np.min(learning_rates)*0.9, np.max(learning_rates)*1.1])
 ax.set_ylim([np.min(lambdas)*0.9, np.max(lambdas)*1.1])
 ax.set_yscale("log")

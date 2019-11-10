@@ -14,30 +14,27 @@ try:
     ny = int(sys.argv[2])
     sigma = float(sys.argv[3])
 except IndexError:
-    raise IndexError(
-        f"Input the number of points in x direction, y direction"
-        + f" and the standard deviation"
-    )
+    raise IndexError(f"Input the number of points in x direction, y direction"
+                     + f" and the standard deviation")
 except ValueError:
     raise TypeError("Input must be: int, int, float")
 
+# Set font sizes for plotting
 fonts = {"font.family": "serif", "axes.labelsize": 8, "font.size": 8,
          "legend.fontsize": 8, "xtick.labelsize": 8, "ytick.labelsize": 8,
          "axes.titlesize": 8}
 
 plt.rcParams.update(fonts)
 
+# Import the data
 meshgrid = np.load(f"Data/Franke_meshgrid_{nx}_{ny}_{sigma}.npz")
-
 x_meshgrid, y_meshgrid, z_meshgrid = meshgrid["x"], meshgrid["y"], meshgrid["z"]
-
 
 train_set = np.load(f"Data/Franke_train_{nx}_{ny}_{sigma}.npz")
 test_set = np.load(f"Data/Franke_test_{nx}_{ny}_{sigma}.npz")
 
 X_train, z_train = train_set["X_train"], train_set["z_train"].reshape(-1, 1)
 X_test, z_test = test_set["X_test"], test_set["z_test"].reshape(-1, 1)
-
 
 scaler = joblib.load(f"Models/Scaler_data_features_{nx}_{ny}_{sigma}.pkl")
 
@@ -56,7 +53,7 @@ surf = ax.plot_surface(x_meshgrid, y_meshgrid, z_meshgrid,
                        antialiased=False, alpha=0.5)
 
 ax.scatter(scaler.inverse_transform(X_test)[:,0], scaler.inverse_transform(X_test)[:,1],
-           y_pred_test, marker=".", s=7, label="test")
+           y_pred_test, marker="o", s=6, label="test")
 
 ax.view_init(elev=20, azim=80)
 ax.axis("off")
@@ -74,13 +71,14 @@ surf = ax.plot_surface(x_meshgrid, y_meshgrid, z_meshgrid,
                        antialiased=False, alpha=0.5)
 
 ax.scatter(scaler.inverse_transform(X_train)[:,0], scaler.inverse_transform(X_train)[:,1],
-           y_pred_train, marker=".", s=7, label="train")
+           y_pred_train, marker="o", s=6, label="train")
 
 ax.view_init(elev=20, azim=80)
 ax.axis("off")
 ax.grid(False)
 ax.set_frame_on(False)
-fig.savefig(f"Figures/3dplot_train_{nx}_{ny}_{sigma}.png",bbox_inches="tight",pad_inches=0,dpi=1000)
+fig.savefig(f"Figures/3dplot_train_{nx}_{ny}_{sigma}.png", bbox_inches="tight",
+            pad_inches=0,dpi=1000)
 
 # Plotting hyperparameter search
 df = pd.read_csv(f"Data/train_franke_NN_{nx}_{ny}_{sigma}.csv",
@@ -101,17 +99,17 @@ lambdas = df["param_lambd"].values.astype(np.float)
 best_learning_rate = learning_rates[validation_score == np.max(validation_score)][0]
 best_lambda = lambdas[validation_score == np.max(validation_score)][0]
 
-print(f"R2 score test: {model.r2_score(X_test, z_test):.6f}.\n"
-      + f"R2 score train: {model.r2_score(X_train, z_train):.6f}")
-print(f"Best lambda: {best_lambda:e}\n"
+print(f"R2 score test: {model.r2_score(X_test, z_test):.6f}\n"
+      + f"R2 score train: {model.r2_score(X_train, z_train):.6f}\n"
+      + f"Best lambda: {best_lambda:e}\n"
       + f"Best learning rate: {best_learning_rate:e}")
 
 fig, ax = plt.subplots()
 fig.set_size_inches(3.03, 3.03)
 plt.title("Learning rate and regularization\n accuracy:\n Neural Network - Regression")
 ax.scatter(learning_rates, lambdas, c=validation_score, s=20, cmap=cm.coolwarm)
-ax.set_xlabel(r"Learning rate $\eta$")
-ax.set_ylabel(r"Shrinkage parameter $\lambda$")
+ax.set_xlabel(r"Learning rate $\gamma$")
+ax.set_ylabel(r"Regularization parameter $\lambda$")
 ax.set_xlim([np.min(learning_rates)*0.9, np.max(learning_rates)*1.1])
 ax.set_ylim([np.min(lambdas)*0.9, np.max(lambdas)*1.1])
 ax.set_yscale("log")

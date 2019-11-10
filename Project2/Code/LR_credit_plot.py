@@ -6,13 +6,14 @@ import scipy.integrate as scint
 
 from main import LogReg
 
-
+# Set font sizes for plotting
 fonts = {"font.family": "serif", "axes.labelsize": 8, "font.size": 8,
          "legend.fontsize": 8, "xtick.labelsize": 8, "ytick.labelsize": 8,
          "axes.titlesize": 8}
 
 plt.rcParams.update(fonts)
 
+# Import the data
 test_set = np.load("Data/Credit_test.npz")
 train_set = np.load("Data/Credit_train.npz")
 X_test, y_test = test_set["X_test"], test_set["y_test"].reshape(-1, 1)
@@ -50,7 +51,6 @@ fig.tight_layout()
 fig.savefig("Figures/cumulative_gain_logreg.png", dpi=1000)
 fig.clf()
 
-
 area_baseline = 0.5
 area_best = scint.simps(gains_best, x) - area_baseline
 
@@ -60,17 +60,8 @@ area_0 = scint.simps(gains_0, x) - area_baseline
 x, gains_1 = skplt.helpers.cumulative_gain_curve(y_test.ravel(), prob_split[:,1], 1)
 area_1 = scint.simps(gains_1, x) - area_baseline
 
-
-ratio_not_default = area_0 / area_best
-ratio_default = area_1 / area_best
-
-print(f"Area ratio for predicting not default: {ratio_not_default:.6f}\n"
-      + f"Area ratio for predicting default: {ratio_default:.6f} \n"
-      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test):.6f} \n"
-      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train):.6f} \n"
-      + f"Accuracy score test: {model.accuracy_score(X_test, y_test):.6f} \n"
-      + f"Accuracy score train: {model.accuracy_score(X_train, y_train):.6f}")
-
+ratio_not_default = area_0/area_best
+ratio_default = area_1/area_best
 
 df = pd.read_csv("Data/train_credit_LR.csv", header=None, skiprows=1).T
 
@@ -84,7 +75,13 @@ validation_score = df["mean_test_score"].values.astype(np.float)
 learning_rates = df["param_learning_rate"].values.astype(np.float)
 best_learning_rate = learning_rates[validation_score == np.max(validation_score)][0]
 
-print(f"Best learning rate: {best_learning_rate:e}")
+print(f"Area ratio for predicting not default: {ratio_not_default:.6f}\n"
+      + f"Area ratio for predicting default: {ratio_default:.6f}\n"
+      + f"Error rate test: {1 - model.accuracy_score(X_test, y_test):.6f}\n"
+      + f"Error rate train: {1 - model.accuracy_score(X_train, y_train):.6f}\n"
+      + f"Accuracy score test: {model.accuracy_score(X_test, y_test):.6f}\n"
+      + f"Accuracy score train: {model.accuracy_score(X_train, y_train):.6f}\n"
+      + f"Best learning rate: {best_learning_rate:e}")
 
 fig, ax = plt.subplots()
 fig.set_size_inches(3.03, 3.03)
