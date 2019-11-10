@@ -12,6 +12,20 @@ filename = cwd + "/Data/default of credit card clients.xls"
 df = pd.read_excel(filename, header=1, skiprows=0, index_col=0)
 df.rename(index=str, columns={"default payment next month": "dpnm"}, inplace=True)
 
+# Remove instances with zeros only for past bill statements or paid amounts
+df = df.drop(df[(df.BILL_AMT1 == 0) &
+                (df.BILL_AMT2 == 0) &
+                (df.BILL_AMT3 == 0) &
+                (df.BILL_AMT4 == 0) &
+                (df.BILL_AMT5 == 0) &
+                (df.BILL_AMT6 == 0) &
+                (df.PAY_AMT1 == 0) &
+                (df.PAY_AMT2 == 0) &
+                (df.PAY_AMT3 == 0) &
+                (df.PAY_AMT4 == 0) &
+                (df.PAY_AMT5 == 0) &
+                (df.PAY_AMT6 == 0)].index)
+
 # Features/design matrix X and targets y
 feature = df.loc[:, (df.columns != "dpnm")]
 X = feature.values

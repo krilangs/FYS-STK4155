@@ -1,3 +1,4 @@
+from __future__ import division
 import scipy.stats
 import numpy as np
 import scipy.special as sps
@@ -238,9 +239,7 @@ class MLPClassifier(RegClass):
     def predict_prob(self, X):
         """
         Predicts output probabilities
-        Parameters:
-        X: numpy ndarray
-            Feature matrix
+        X: ndarray - Design matrix
         """
         if self.weights_hidden[0].shape[0] != X.shape[1]:
             print(len(self.weights_hidden[0].shape[0]), X.shape[1])
@@ -415,7 +414,6 @@ class MLPClassifier(RegClass):
     def load_model(self, filename):
         """
         Loads a saved model containing the weights and biases.
-        Parameters:
         filename: File name
         """
         model = np.load(f"Models/{filename}", allow_pickle=True)
