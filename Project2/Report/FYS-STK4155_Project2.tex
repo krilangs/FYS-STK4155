@@ -340,7 +340,7 @@ If we compare the error rates we got in Table \ref{tab:logreg} and the ones in t
 	\subfloat[Here we see a heatmap for the validation accuracy for the neural network classification case as function of the regularization parameter and learning rate. This is a visualization of how to find the best learning rate and best regularization parameter to be used in the neural network. Here we see that the best values are around $\lambda=10^{-4}$ and $\gamma=5\cdot10^{-2}$.\label{subfig:NN_best} ]{\includegraphics[width=0.5\linewidth]{nn_learning_rate_lambda_accuracy_credit.png}}
 	\caption{This is visualizations of how the accuracy score changes with the learning rate and regularization parameter, to find the best values.\label{fig:class_best_params}}
 \end{figure}
-\begin{figure}[htbp]
+\begin{figure}[t!]
 	%\hspace*{-2.5cm}
 	\subfloat[This is a plot of the cumulative gain for logistic regression fitting the credit card data as function of the number of samples.\label{subfig:LR_chart} ]{\includegraphics[width=0.5\linewidth]{cumulative_gain_logreg.png}}
 	\hspace{0.5em}
@@ -356,6 +356,13 @@ In Figure \ref{fig:reg_fit} we see 3D plots of the Franke function fitted with N
 
 For comparing the $R^2$ scores for the the first NN model and the OLS in Table \ref{tab:reg} (since they have the same input parameter values), we see that the OLS method is better than the NN. So the OLS in linear regression outperforms the NN regression in this case. If we increase the number of grid points and decrease the noise term, we see that the $R^2$ score increases a lot. So this gives a better fit for the Franke data when we increase the number of data points. This change give us a big increase in the CPU time as well. For the smaller number of grid points the CPU time was around 8 minutes, while for the bigger grid the time increased to around 40 minutes. One thing which is not tested is to run the OLS with the same parameters as the last NN with 10 000 grid points. This would most likely increase the $R^2$ score of the OLS. So the better method seems to be the OLS, which is a simple method that does not take nearly as long as the NN calculations.
 
+\begin{figure}[htbp]
+	%\hspace*{-2.5cm}
+	\subfloat[Here we see a heatmap of the $R^2$ score for the neural network regression case as function of the regularization parameter and learning rate with $n_x=n_y=50$ and $\sigma=0.2$. This is a visualization of how to find the best learning rate and best regularization parameter to be used in the neural network. Here we see that the best values are around $\lambda=10^{-10}-10^{-5}$ and $\gamma=10^{-5}-10^{-3}$.\label{subfig:NN_low} ]{\includegraphics[width=0.5\linewidth]{nn_learning_rate_lambda_r2_franke_50_50_0_2.png}}
+	\hspace{0.5em}
+	\subfloat[Here we see a heatmap of the $R^2$ score for the neural network regression case as function of the regularization parameter and learning rate with $n_x=n_y=100$ and $\sigma=0.1$. This is a visualization of how to find the best learning rate and best regularization parameter to be used in the neural network. Here we see that the best values are around $\lambda=10^{-9}-10^{-5}$ and $\gamma=10^{-5}-10^{-3}$. \label{subfig:NN_high} ]{\includegraphics[width=0.5\linewidth]{nn_learning_rate_lambda_r2_franke_100_100_0_1.png}}
+	\caption{This is visualizations of how the accuracy score changes with the learning rate and regularization parameter, to find the best values.\label{fig:reg_best_params}}
+\end{figure}
 \begin{table}[htbp!]
 	\centering
 	%\hspace{-1cm}
@@ -377,13 +384,13 @@ For comparing the $R^2$ scores for the the first NN model and the OLS in Table \
 	\caption{Table for regression case for neural network and linear regression with ordinary least squares (OLS) on the Franke function data with the given parameters. $n_x$ and $n_y$ are the number of grid points in the x- and y-direction respectively, while $\sigma$ is the standard deviation (STD) in the added Gaussian noise term. Here we see that for the same parameters, the OLS is the better fit to the Franke data than the NN fro regression. By increasing the number of grid points from 2500 to 10 000 and decreasing the STD to 0.1, the $R^2$ score is increased by a lot. This also heavily increases the CPU time from around 8 minutes to around 40 minutes for running the randomized cross-validation search for the hyperparameters (sect. \ref{subsect:tuning}).}
 	\label{tab:reg}
 \end{table}
-\begin{figure}[htbp]
-	%\hspace*{-2.5cm}
-	\subfloat[Here we see a heatmap of the $R^2$ score for the neural network regression case as function of the regularization parameter and learning rate with $n_x=n_y=50$ and $\sigma=0.2$. This is a visualization of how to find the best learning rate and best regularization parameter to be used in the neural network. Here we see that the best values are around $\lambda=10^{-10}-10^{-5}$ and $\gamma=10^{-5}-10^{-3}$.\label{subfig:NN_low} ]{\includegraphics[width=0.5\linewidth]{nn_learning_rate_lambda_r2_franke_50_50_0_2.png}}
-	\hspace{0.5em}
-	\subfloat[Here we see a heatmap of the $R^2$ score for the neural network regression case as function of the regularization parameter and learning rate with $n_x=n_y=100$ and $\sigma=0.1$. This is a visualization of how to find the best learning rate and best regularization parameter to be used in the neural network. Here we see that the best values are around $\lambda=10^{-9}-10^{-5}$ and $\gamma=10^{-5}-10^{-3}$. \label{subfig:NN_high} ]{\includegraphics[width=0.5\linewidth]{nn_learning_rate_lambda_r2_franke_100_100_0_1.png}}
-	\caption{This is visualizations of how the accuracy score changes with the learning rate and regularization parameter, to find the best values.\label{fig:reg_best_params}}
-\end{figure}
+
+\newpage
+\section{Conclusion}
+In this project we have used logistic regression and neural network to analyze a binary classification case for credit card data, and to analyze a regression case for data sets produced by the Franke function (eq. \ref{eq:Franke_func}). For these data sets we have calculated how well the models fits to the data sets by the accuracy score (eq. \ref{eq:accuracy_score}) for classification and $R^2$ score (eq. \ref{eq:R2_score}) for regression. These results were then compared between the methods we have used, the results in a similar scientific paper \cite{origarticle} and the results in a previous project \cite{proj1} for linear regression on the Franke function. From all this calculations we can conclude that in this case the neural network (NN) works better for classification than logistic regression (LR). We got a higher accuracy score and area ratio for NN, around 0.795 and 0.566, than for LR, around 0.714 and 0.470. This corresponds quite well with the results in the scientific paper, which also concludes that neural network is better than logistic regression for classification. Even though the NN gives a better fit to the credit card data, it is a computer heavy model which also can be difficult to fully interpret. In the regression case, we found that linear regression with ordinary least squares (OLS) and $n_x=n_y=50, \sigma=0.2$ gives a better fit than the NN. The NN gave a $R^2=0.551$ while the the OLS gave $R^2=0.681$. Linear regression is also a much simpler model to both implement and to understand than neural network.
+
+In the future we could try out other methods for classification like decision trees or gradient boosting. Especially gradient boosting is a hot topic in statistical physics today. They seem to be in the most cases very effective and maybe one of the best methods for classification cases today. Alternatively, we could try to improve our neural network code by changing different parameters like hidden layers, number of nodes etc. We could also try out different gradient solvers or activation functions to see how they affect the calculations.
+
 \begin{figure}[htbp]
 	%\hspace*{-2.5cm}
 	\subfloat[3D plot of the Franke function with STD $\sigma=0.2$ and total number of grid points 2 500 for the training data.\label{subfig:franke_50_train} ]{\includegraphics[width=0.5\linewidth]{3dplot_train_50_50_0_2.png}}
@@ -394,11 +401,6 @@ For comparing the $R^2$ scores for the the first NN model and the OLS in Table \
 	\subfloat[3D plot of the Franke function with STD $\sigma=0.1$ and total number of grid points 10 000 for the test data. \label{subfig:franke_100_test} ]{\includegraphics[width=0.5\linewidth]{3dplot_test_100_100_0_1.png}}
 	\caption{Here we see 3D plots of the Franke function data with added noise $\mathcal{N}(0,\sigma^2)$ fitted on the training and test sets. The dots represents the regression model we got from the neural network calculations. Here we see that is looks like the bottom two figures fits the data more. This is reasonable since they have a much higher $R^2$ score in Table \ref{tab:reg}.\label{fig:reg_fit}}
 \end{figure}
-
-\section{Conclusion}
-In this project we have used logistic regression and neural network to analyze a binary classification case for credit card data, and to analyze a regression case for data sets produced by the Franke function (eq. \ref{eq:Franke_func}). For these data sets we have calculated how well the models fits to the data sets by the accuracy score (eq. \ref{eq:accuracy_score}) for classification and $R^2$ score (eq. \ref{eq:R2_score}) for regression. These results were then compared between the methods we have used, the results in a similar scientific paper \cite{origarticle} and the results in a previous project \cite{proj1} for linear regression on the Franke function. From all this calculations we can conclude that in this case the neural network (NN) works better for classification than logistic regression (LR). We got a higher accuracy score and area ratio for NN, around 0.795 and 0.566, than for LR, around 0.714 and 0.470. This corresponds quite well with the results in the scientific paper, which also concludes that neural network is better than logistic regression for classification. Even though the NN gives a better fit to the credit card data, it is a computer heavy model which also can be difficult to fully interpret. In the regression case, we found that linear regression with ordinary least squares (OLS) and $n_x=n_y=50, \sigma=0.2$ gives a better fit than the NN. The NN gave a $R^2=0.551$ while the the OLS gave $R^2=0.681$. Linear regression is also a much simpler model to both implement and to understand than neural network.
-
-In the future we could try out other methods for classification like decision trees or gradient boosting. Especially gradient boosting is a hot topic in statistical physics today. They seem to be in the most cases very effective and maybe one of the best methods for classification cases today. Alternatively, we could try to improve our neural network code by changing different parameters like hidden layers, number of nodes etc. We could also try out different gradient solvers or activation functions to see how they affect the calculations.
 
 \appendix
 \section{Appendix}
