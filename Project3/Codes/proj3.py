@@ -29,6 +29,8 @@ feature = pulsar_data.loc[:, pulsar_data.columns != "Target"]
 X = feature.values
 y = pulsar_data.loc[:, pulsar_data.columns == "Target"].values
 
+
+
 # Split into training and test data
 X_train, X_test, y_train, y_test = train_test_split(X, np.ravel(y), test_size=0.27,
                                                     random_state=42)
@@ -41,7 +43,7 @@ X_test = scalar.transform(X_test)
 
 # Information gain of the features
 cols = list(feature.columns)
-infos = mutual_info_classif(X_test, y_test, random_state=42)
+infos = mutual_info_classif(X_train, y_train, random_state=42)
 info_gain_int = {cols[0]:[infos[0]], cols[1]:[infos[1]],
                  cols[2]:[infos[2]], cols[3]:[infos[3]]}
 info_gain_int = pd.DataFrame(info_gain_int)
@@ -49,8 +51,8 @@ info_gain_curve = {cols[4]:[infos[4]], cols[5]:[infos[5]],
                    cols[6]:[infos[6]], cols[7]:[infos[7]]}
 info_gain_curve = pd.DataFrame(info_gain_curve)
 
-print(info_gain_int)
-print(info_gain_curve)
+#print(info_gain_int)
+#print(info_gain_curve)
 
 
 # Various classification models
@@ -60,30 +62,37 @@ tree_clf = DecisionTreeClassifier(random_state=42)
 bag_clf = skle.BaggingClassifier(tree_clf, n_estimators=500, max_samples=100,
                                  bootstrap=True, n_jobs=-1, random_state=42)
 bag_clf.fit(X_train, y_train)
-rnd_clf = skle.RandomForestClassifier(n_estimators=100, random_state=42)
+rnd_clf = skle.RandomForestClassifier(n_estimators=500, random_state=42)
 
-voting_hard_clf = skle.VotingClassifier(estimators=[('lr', log_clf),
-                                        ('rf', rnd_clf), ('svc', svm_clf),
-                                        ('bag', bag_clf), ('tree', tree_clf)],
-                                        voting='hard')
+voting_hard_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
+                                        ("rf", rnd_clf), ("svc", svm_clf),
+                                        ("bag", bag_clf), ("tree", tree_clf)],
+                                        voting="hard")
 voting_hard_clf.fit(X_train, y_train)
 
-voting_soft_clf = skle.VotingClassifier(estimators=[('lr', log_clf),
-                                        ('rf', rnd_clf), ('svc', svm_clf),
-                                        ('bag', bag_clf), ('tree', tree_clf)],
-                                        voting='soft')
+voting_soft_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
+                                        ("rf", rnd_clf), ("svc", svm_clf),
+                                        ("bag", bag_clf), ("tree", tree_clf)],
+                                        voting="soft")
 voting_soft_clf.fit(X_train, y_train)
 
 ada_clf = skle.AdaBoostClassifier(tree_clf, n_estimators=200, algorithm="SAMME.R",
                                   learning_rate=0.5, random_state=42)
 ada_clf.fit(X_train, y_train)
 
-gd_clf = skle.GradientBoostingClassifier(random_state=42)
+gd_clf = skle.GradientBoostingClassifier(loss="exponential", n_estimators=500,
+                                         random_state=42)
 gd_clf.fit(X_train, y_train)
 
 xg_clf = xgb.XGBClassifier(random_state=42)
 xg_clf.fit(X_train, y_train)
 
+voting_all_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
+                            ("rf", rnd_clf), ("svc", svm_clf),
+                            ("bag", bag_clf), ("tree", tree_clf),
+                            ("ada", ada_clf), ("gd", gd_clf), ("xg", xg_clf)],
+                            voting='soft')
+voting_all_clf.fit(X_train, y_train)
 
 def classifier(clf, title):
     clf.fit(X_train, y_train)
@@ -127,13 +136,13 @@ def data_info():
     sns.heatmap(pulsar_data.corr(), annot=True, linecolor="blue", fmt=".2f", ax=ax)
 
 def create_tree():
-    tree_clf = DecisionTreeClassifier(max_depth=5)
+    tree_clf = DecisionTreeClassifier(criterion="entropy", max_depth=5)
     tree_clf.fit(X, y)
 
-    export_graphviz(tree_clf, out_file="Data/tree.dot", filled=True, rounded=True,
+    export_graphviz(tree_clf, out_file="Data/tree2.dot", filled=True, rounded=True,
                     special_characters=True, proportion=False,
                     class_names="Target", feature_names=list(feature.columns))
-    cmd = 'dot -Tpng Data/tree.dot -o Data/tree.png'
+    cmd = 'dot -Tpng Data/tree2.dot -o Data/tree2.png'
     os.system(cmd)
 
 def xbg_plot():
@@ -153,10 +162,11 @@ if __name__ == "__main__":
     #classifier(tree_clf, title="Decision Tree")
     #classifier(bag_clf, title="Bagging")
     #classifier(rnd_clf, title="Random Forest")
-    #classifier(voting_hard_clf, title="Hard Voting Classifier")
-    #classifier(voting_soft_clf, title="Soft Voting Classifier")
+    #classifier(voting_hard_clf, title="Hard Voting Class")
+    #classifier(voting_soft_clf, title="Soft Voting Class")
     #classifier(ada_clf, title="AdaBoost")
     #classifier(gd_clf, title="Gradient boost")
     #classifier(xg_clf, title="XGBoost")
+    classifier(voting_all_clf, title="Voting All")
     #xbg_plot()
     pass
