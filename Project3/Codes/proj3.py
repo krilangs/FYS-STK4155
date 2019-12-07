@@ -14,6 +14,7 @@ from sklearn.feature_selection import mutual_info_classif
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.model_selection import cross_val_score, train_test_split
 
+from scipy.stats import pointbiserialr
 
 # Read file into data frame, and inspect the data set
 infile = open("pulsar_stars.csv", "r")
@@ -28,8 +29,6 @@ pulsar_data = pd.DataFrame(pulsar_data)
 feature = pulsar_data.loc[:, pulsar_data.columns != "Target"]
 X = feature.values
 y = pulsar_data.loc[:, pulsar_data.columns == "Target"].values
-
-
 
 # Split into training and test data
 X_train, X_test, y_train, y_test = train_test_split(X, np.ravel(y), test_size=0.27,
@@ -115,7 +114,8 @@ def classifier(clf, title):
                      "Bias":[bias]}
     score_and_mse = pd.DataFrame(score_and_mse)
 
-    conf_mat = skplt.metrics.plot_confusion_matrix(y_test, y_pred, normalize=True)
+    conf_mat = skplt.metrics.plot_confusion_matrix(y_test, y_pred, normalize=True,
+                                                   values_format=".3f")
     conf_mat.set_title("Norm. Confusion Matrix:\n" + title)
 
     y_probas = clf.predict_proba(X_test)
@@ -134,6 +134,10 @@ def data_info():
     print(pulsar_data["Target"].value_counts())
     f, ax = plt.subplots(figsize=(15, 15))
     sns.heatmap(pulsar_data.corr(), annot=True, linecolor="blue", fmt=".2f", ax=ax)
+    # Point-biserial correlation, linear correlation between the variables for
+    # dichotomous target variable
+    for i in range(8):
+        print(pointbiserialr(np.ravel(y), X[:,i]))
 
 def create_tree():
     tree_clf = DecisionTreeClassifier(criterion="entropy", max_depth=5)
@@ -167,6 +171,6 @@ if __name__ == "__main__":
     #classifier(ada_clf, title="AdaBoost")
     #classifier(gd_clf, title="Gradient boost")
     #classifier(xg_clf, title="XGBoost")
-    classifier(voting_all_clf, title="Voting All")
+    #classifier(voting_all_clf, title="Voting All")
     #xbg_plot()
     pass
