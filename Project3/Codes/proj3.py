@@ -54,7 +54,6 @@ info_gain_curve = pd.DataFrame(info_gain_curve)
 #print(info_gain_int)
 #print(info_gain_curve)
 
-
 # Various classification models
 log_clf = LogisticRegression(solver="liblinear", random_state=42)
 svm_clf = SVC(gamma="auto", probability=True, random_state=42)
@@ -84,14 +83,15 @@ gd_clf = skle.GradientBoostingClassifier(loss="exponential", n_estimators=500,
                                          random_state=42)
 gd_clf.fit(X_train, y_train)
 
-xg_clf = xgb.XGBClassifier(random_state=42)
+xg_clf = xgb.XGBClassifier(objective="multi:softprob", num_class=2, max_depth=5,
+                           n_estimators=200, learning_rate=0.1, random_state=42)
 xg_clf.fit(X_train, y_train)
 
 voting_all_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
                             ("rf", rnd_clf), ("svc", svm_clf),
                             ("bag", bag_clf), ("tree", tree_clf),
                             ("ada", ada_clf), ("gd", gd_clf), ("xg", xg_clf)],
-                            voting='soft')
+                            voting="soft", n_jobs=-1)
 voting_all_clf.fit(X_train, y_train)
 
 def classifier(clf, title):
@@ -105,6 +105,8 @@ def classifier(clf, title):
     cr = sklm.classification_report(y_test, y_pred)
     cks = sklm.cohen_kappa_score(y_test, y_pred)
 
+    print("Classification report for " + title + " : \n", cr)
+
     print("Cross-validation score:")  # Test score
     print(cross_val_score(clf, X_test, y_test, cv=10))
 
@@ -112,8 +114,6 @@ def classifier(clf, title):
                      "Cohen Kappa Score":[cks], "MSE":[mse], "Var":[variance],
                      "Bias":[bias]}
     score_and_mse = pd.DataFrame(score_and_mse)
-
-    print("Classification report for " + title + " : \n", cr)
 
     conf_mat = skplt.metrics.plot_confusion_matrix(y_test, y_pred, normalize=True)
     conf_mat.set_title("Norm. Confusion Matrix:\n" + title)
