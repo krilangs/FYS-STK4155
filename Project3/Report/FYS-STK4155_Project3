@@ -1,0 +1,77 @@
+\documentclass[12pt,a4paper,english]{article}
+\usepackage{times}
+\usepackage[utf8]{inputenc}
+\usepackage{babel,textcomp}
+\usepackage{mathpazo}
+\usepackage{mathtools}
+\usepackage{amsmath,amssymb}
+\usepackage{ dsfont }
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{ mathrsfs }
+\usepackage{float}
+\usepackage{subfig} 
+\usepackage[colorlinks]{hyperref}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{backgroundcolor=\color{lbcolor},tabsize=4,rulecolor=,language=python,basicstyle=\scriptsize,upquote=true,aboveskip={1.5\baselineskip},columns=fixed,numbers=left,showstringspaces=false,extendedchars=true,breaklines=true,
+prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,showtabs=false,showspaces=false,showstringspaces=false,identifierstyle=\ttfamily,keywordstyle=\color[rgb]{0,0,1},commentstyle=\color[rgb]{0.133,0.545,0.133},stringstyle=\color[rgb]{0.627,0.126,0.941},literate={å}{{\r a}}1 {Å}{{\r A}}1 {ø}{{\o}}1}
+
+% Use for references
+\usepackage[square,comma,numbers]{natbib}
+%\DeclareRobustCommand{\citeext}[1]{\citeauthor{#1}~\cite{#1}}
+
+% Fix spacing in tables and figures
+%\usepackage[belowskip=0pt,aboveskip=5pt]{caption}
+%\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+% Change the page layout
+%\usepackage[showframe]{geometry}
+%\usepackage{layout}
+\setlength{\hoffset}{-0.5in}  % Length left
+\setlength{\voffset}{-0.7in}  % Length on top
+\setlength{\textwidth}{460pt}  % Width /597pt
+\setlength{\textheight}{660pt}  % Height /845pt
+%\setlength{\footskip}{25pt}
+
+\newcommand{\VEV}[1]{\langle#1\rangle}
+\title{FYS-STK4155 - Project 3}
+\date{}
+\author{ Kristoffer Langstad \footnote{\url{https://github.com/krilangs/FYS-STK4155}}\\ \textit{krilangs@uio.no}}
+
+\begin{document}%\layout
+\maketitle
+\begin{abstract}
+	...
+\end{abstract}
+\section{Introduction}
+\label{sect:Introduction}
+Machine learning is a more and more used method for classification problems. One application of machine learning is to create filters that decreases the human dependency for classification. Normally a human is needed to go through data and decide what the classification of an object is. With machine learning the goal is to make this as automated as possible by using suited algorithms and methods. We will look at several methods for classification in this project.
+
+In this project we will study a binary classification problem involving the prediction of pulsar star candidates collected during the HTRU survey from the UCI Machine Learning Repository \cite{UCI}. This data set, called HTRU2, has previously been studied in a scientific paper by \citet{pulsar_art} for finding good filters for classification of pulsars. So some of the results in this paper is used to compare with the results we get. We will use several classification methods from the Scikit-Learn library in Python for classifying the pulsar data, to see which method(s) is the best for classifying these pulsar data. We will explore different approaches from decision trees to random forests, different boosting methods and a couple of other classification methods. For the analysis part we will look at among others the accuracy score, Cohen Kappa score, mean squared error (MSE), confusion matrix and so on.
+
+First we will look at the HRTU2 data set to be evaluated, what it contains and information about the data set. Then in the theory section we will look at the theory of the different classification methods and analysis methods to be used. In the methods section we explain the implementation of the algorithms in Python. Here we first download and read in the data to a Python program. With this program we will look at the data a bit more by looking at the correlation and the information gain
+of the data features. Then we split the data into training and test data to be used in the various algorithms. For these algorithms we test to find the best input parameters. In the results section we will present and discuss the classification results, and compare them with the scientific report. Lastly, we give a critical evaluation of the methods on which is the best method on the pulsar data set.
+
+\section{Data}
+\label{sect:Data}
+\section{Theory}
+\label{sect:Theory}
+\section{Methods}
+\label{sect:Methods}
+\section{Results}
+\label{sect:Results}
+\section{Conclusion}
+\label{sect:Conclusion}
+
+\appendix
+\section{Appendix}
+\label{sect:Appendix}
+Link to GitHub repository:\\
+\url{https://github.com/krilangs/FYS-STK4155/tree/master/Project3}
+
+\bibliographystyle{plainnat}
+\bibliography{myrefs}
+\end{document}
