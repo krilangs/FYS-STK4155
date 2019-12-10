@@ -1,0 +1,119 @@
+\documentclass[12pt,a4paper,english]{article}
+\usepackage{times}
+\usepackage[utf8]{inputenc}
+\usepackage{babel,textcomp}
+\usepackage{mathpazo}
+\usepackage{mathtools}
+\usepackage{amsmath,amssymb}
+\usepackage{ dsfont }
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{ mathrsfs }
+\usepackage{float}
+\usepackage{subfig} 
+\usepackage[colorlinks]{hyperref}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{backgroundcolor=\color{lbcolor},tabsize=4,rulecolor=,language=python,basicstyle=\scriptsize,upquote=true,aboveskip={1.5\baselineskip},columns=fixed,numbers=left,showstringspaces=false,extendedchars=true,breaklines=true,
+prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,showtabs=false,showspaces=false,showstringspaces=false,identifierstyle=\ttfamily,keywordstyle=\color[rgb]{0,0,1},commentstyle=\color[rgb]{0.133,0.545,0.133},stringstyle=\color[rgb]{0.627,0.126,0.941},literate={å}{{\r a}}1 {Å}{{\r A}}1 {ø}{{\o}}1}
+
+% Use for references
+\usepackage[square,comma,numbers]{natbib}
+%\DeclareRobustCommand{\citeext}[1]{\citeauthor{#1}~\cite{#1}}
+
+% Fix spacing in tables and figures
+%\usepackage[belowskip=0pt,aboveskip=5pt]{caption}
+%\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+% Change the page layout
+%\usepackage[showframe]{geometry}
+%\usepackage{layout}
+\setlength{\hoffset}{-0.5in}  % Length left
+\setlength{\voffset}{-0.7in}  % Length on top
+\setlength{\textwidth}{460pt}  % Width /597pt
+\setlength{\textheight}{660pt}  % Height /845pt
+%\setlength{\footskip}{25pt}
+
+\newcommand{\VEV}[1]{\langle#1\rangle}
+\title{FYS-STK4155 - Project 3}
+\date{}
+\author{ Kristoffer Langstad \footnote{\url{https://github.com/krilangs/FYS-STK4155}}\\ \textit{krilangs@uio.no}}
+
+\begin{document}%\layout
+\maketitle
+\begin{abstract}
+	...
+\end{abstract}
+\section{Introduction}
+\label{sect:Introduction}
+Machine learning is a more and more used method for classification problems. One application of machine learning is to create filters that decreases the human dependency for classification. Normally a human is needed to go through data and decide what the classification of an object is. With machine learning the goal is to make this as automated as possible by using suited algorithms and methods. We will look at several methods for classification in this project.
+
+In this project we will study a binary classification problem involving the prediction of pulsar star candidates collected during the HTRU survey from the UCI Machine Learning Repository \cite{UCI}. This data set, called HTRU2, has previously been studied in a scientific paper by \citet{pulsar_art} for finding good filters for classification of pulsars. So some of the results in this paper is used to compare with the results we get. We will use several classification methods from the Scikit-Learn library in Python for classifying the pulsar data, to see which method(s) is the best for classifying these pulsar data. We will explore different approaches from decision trees to random forests, different boosting methods and a couple of other classification methods. For the analysis part we will look at among others the accuracy score, Cohen Kappa score, mean squared error (MSE), confusion matrix and so on.
+
+First we will look at the HRTU2 data set to be evaluated, what it contains and information about the data set. Then in the theory section we will look at the theory of the different classification methods and analysis methods to be used. In the methods section we explain the implementation of the algorithms in Python. Here we first download and read in the data to a Python program. With this program we will look at the data a bit more by looking at the correlation and the information gain
+of the data features. Then we split the data into training and test data to be used in the various algorithms. For these algorithms we test to find the best input parameters. In the results section we will present and discuss the classification results, and compare them with the scientific report. Lastly, we give a critical evaluation of the methods on which is the best method on the pulsar data set.
+
+\section{Data}
+\label{sect:Data}
+The HRTU2 data set we are analyzing is downloaded from the UCI Machine Learning Repository \cite{UCI} as a CSV file. The data file contains feature data about possible pulsar candidates collected during the High Time Resolution Universe (HTRU) survey, and are classified as pulsars (positive, 1) or non-pulsars (negative, 0). 
+
+Pulsar stars are Neutron stars that rotate with such velocity that they emit radio emission that we can detect on Earth. These stars are often very rare, and are interesting to us in the matter of probes of space-time, interstellar-medium and states of matter \cite{UCI}. The beam the pulsars emit when rotating are different from pulsar to pulsar, and they may even vary a little for each rotation. So to find a potential signal candidate, the signals are averaged over many rotations of the pulsars. In most cases the detected signals are caused by noise and radio frequency interference (RFI), and not signals from real pulsars.
+
+The data set contains a total of 17 898 number of instances (161 082 data points), where 1 639 are real pulsar examples and 16 259 are spurious examples caused by noise/RFI. So the real pulsar data examples are a minority positive class. All the data have been checked by human annotators. Each candidate is stored in a separate row and contains 8 continuous variables and the class label (0 or 1):
+\begin{enumerate}
+	\item Mean of the integrated profile.
+	\item Standard deviation of the integrated profile.
+	\item Excess kurtosis of the integrated profile.
+	\item Skewness of the integrated profile.
+	\item Mean of the DM-SNR curve.
+	\item Standard deviation of the DM-SNR curve.
+	\item Excess kurtosis of the DM-SNR curve.
+	\item Skewness of the DM-SNR curve.
+	\item Class
+\end{enumerate}
+The first four variables are simple statistics from the integrated pulse profile. They describe the longitude-resolved version of the signal that has been averaged in both time and frequency. The next four are obtained from the DM-SNR curve, and contains the same type of information. Their mathematical definitions can be seen in Table 4 in the scientific paper by \citet{pulsar_art}. In this scientific paper (section 5) there are also more thorough explanations about the pulsar data and how they are produced.
+
+The 8 continuous feature variables are set as the design matrix \textbf{X}, and the class variable are the target vector \textbf{y}. The data set looks to be complete without any NAN values.
+
+\section{Theory}
+\label{sect:Theory}
+\section{Methods}
+\label{sect:Methods}
+The programming is done in Python 3.7 in the program \textit{classif.py} found at the GitHub repository \ref{sect:Appendix}, among with the pulsar data file and produced figures.
+\subsection{Analyzing the Data}
+\label{subsect:analysis}
+We start by reading in the downloaded CSV file \textit{pulsar\_stars.csv} of the pulsar candidates in the program. Then we rename the feature variables to be shorter. By using the panda-library, we do an analysis of the data set to make sure that the data file is complete and read in correct. We also check the correlation between the data features by plotting a correlation heatmap using the seaborn-library. Next, we create the design matrix \textbf{X} and target vector \textbf{y} as mentioned in the Data section (\ref{sect:Data}). As in the scientific report \cite{pulsar_art}, we calculate the point-biserial correlation coefficient of the data features with the design matrix and target vector. The design matrix and target vector are then split into training and test data with 27\% test data. Then we scale the design training and test data with respect to the training data. With the training data we calculate the information gain of the features.
+\subsection{Classification}
+\label{subsect:classif}
+Then we implement all the classification methods we explained in the Theory section (\ref{sect:Theory}) into our program using the Scikit-Learn xgboost libraries. This includes (input parameters that are not covered, uses the default parameters):
+\begin{enumerate}
+	\item Logistic Regression (LR): Where we use the \textit{liblinear}-solver.
+	\item Support Vector Machine (SVM): Where we use probability=True.
+	\item Decision Tree: Where we set the maximum depth of the tree to 6. Here we also plot a decision tree for visualization.
+	\item Bagging: Where we use bagging on the decision tree with bootstrap, 500 number of estimators in the ensemble, 200 number of samples to train on each base estimator and use all processors to run the jobs in parallel.
+	\item Random Forest: With 500 number of estimators.
+	\item Voting classifier: Use both hard and soft voting separately on all of the mentioned classifier methods mentioned above together (1-5) and use all processors to run the jobs in parallel.
+	\item AdaBoost: Use AdaBoost on the decision tree with 200 number of estimators, learning rate of 0.5 and the "SAMME.R" real boosting algorithm.
+	\item Gradient boosting: Where we use the exponential loss function to be optimized and 500 number of estimators.
+	\item XGBoost: Where we use the "multi:softprob" learning objective with 2 classes, gbtree booster, 200 number of estimators, 0.1 learning rate, 10 threads to run in parallel and set maximum depth of the tree to 5. Here we also plot the visualization of the first decision tree, and plot the feature importance in the trees.
+	\item Voting classifier: Where we use the soft voting classifier on all the used classification methods (except the other voting classifiers).
+\end{enumerate}
+
+For each of the classification methods above, we do the same evaluations of the pulsar data set. We fit the classification methods to the training data. Then we use the test data to make a prediction of the class labels. With this prediction we calculate the MSE, variance, bias, accuracy score and the Cohen Kappa score. We also make a classification report containing various averages for the classification methods. Then we plot the confusion matrix of the predicted results of the pulsars. With the test data we calculate the cross-validation score with 5 folds. Then we plot the ROC curve for the classification methods for the sensitivity as function of the 100-specificity. For the hard voting classification we use the prediction, while for the others we use the probability estimation of the test data to make the ROC curve plot. Lastly we use the probability estimate to plot the cumulative gain for the class targets as functions of the percentage of the samples.
+
+\section{Results}
+\label{sect:Results}
+\section{Conclusion}
+\label{sect:Conclusion}
+
+\appendix
+\section{Appendix}
+\label{sect:Appendix}
+Link to GitHub repository:\\
+\url{https://github.com/krilangs/FYS-STK4155/tree/master/Project3}
+
+\bibliographystyle{plainnat}
+\bibliography{myrefs}
+\end{document}
