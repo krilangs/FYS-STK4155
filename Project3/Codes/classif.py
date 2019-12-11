@@ -48,7 +48,8 @@ tree_clf = DecisionTreeClassifier(max_depth=6, random_state=42)
 bag_clf = skle.BaggingClassifier(tree_clf, n_estimators=500, max_samples=200,
                                  bootstrap=True, n_jobs=-1, random_state=42)
 
-rnd_clf = skle.RandomForestClassifier(n_estimators=500, random_state=42)
+rnd_clf = skle.RandomForestClassifier(n_estimators=500, n_jobs=-1,
+                                      random_state=42)
 
 voting_hard_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
                                         ("rf", rnd_clf), ("svc", svm_clf),
@@ -62,18 +63,17 @@ voting_soft_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
 ada_clf = skle.AdaBoostClassifier(tree_clf, n_estimators=200, algorithm="SAMME.R",
                                   learning_rate=0.5, random_state=42)
 
-gd_clf = skle.GradientBoostingClassifier(loss="exponential", n_estimators=500,
-                                         random_state=42)
+gd_clf = skle.GradientBoostingClassifier(loss="exponential", n_estimators=200,
+                                         max_depth=9, random_state=42)
 
 xg_clf = xgb.XGBClassifier(objective="multi:softprob", num_class=2, max_depth=5,
-                           n_estimators=200, learning_rate=0.1, n_jobs=10,
-                           random_state=42)
+                           n_estimators=250, learning_rate=0.1, n_jobs=-1,
+                           random_state=42, reg_alpha=0, reg_lambda=1)
 
-voting_all_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
-                            ("rf", rnd_clf), ("svc", svm_clf),
-                            ("bag", bag_clf), ("tree", tree_clf),
-                            ("ada", ada_clf), ("gd", gd_clf), ("xg", xg_clf)],
-                            voting="soft", n_jobs=-1)
+voting_all_clf = skle.VotingClassifier(estimators=[("tree", tree_clf),
+                                      ("rf", rnd_clf), ("ada", ada_clf),
+                                      ("gd", gd_clf), ("xg", xg_clf)],
+                                      voting="soft", n_jobs=-1)
 
 def classifier(clf, title):
     """
@@ -92,8 +92,8 @@ def classifier(clf, title):
     variance = np.mean(np.var(y_pred))
     bias = np.mean((y_test - np.mean(y_pred))**2)
 
-    cr = sklm.classification_report(y_test, y_pred)
     cks = sklm.cohen_kappa_score(y_test, y_pred)
+    cr = sklm.classification_report(y_test, y_pred)
 
     print("Classification report for " + title + " : \n", cr)
 
@@ -118,6 +118,7 @@ def classifier(clf, title):
         plt.title("ROC curve: " + title)
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
+        plt.tight_layout()
         plt.savefig("Figures/ROC_" + title + ".png")
     else:
         y_probas = clf.predict_proba(X_test)
@@ -142,14 +143,14 @@ def data_info():
     f, ax = plt.subplots(figsize=(12, 12))
     sns.heatmap(pulsar_data.corr(), annot=True, linecolor="blue", fmt=".2f",
                 ax=ax, annot_kws={"size": 14})
-    sns.set(font_scale=1.8)
+    sns.set(font_scale=2.5)
     ax.set_title("Heatmap of the data set features")
     plt.tight_layout()
     plt.savefig("Figures/heatmap.png")
 
     # Information gain of the features
     cols = list(feature.columns)
-    infos = mutual_info_classif(X_train, y_train, random_state=42)
+    infos = mutual_info_classif(X, np.ravel(y), random_state=42)
     info_gain_int = {cols[0]:[infos[0]], cols[1]:[infos[1]],
                      cols[2]:[infos[2]], cols[3]:[infos[3]]}
     info_gain_int = pd.DataFrame(info_gain_int)
@@ -199,7 +200,7 @@ def xbg_plot():
     plt.show()
 
 if __name__ == "__main__":
-    data_info()
+    #data_info()
     #create_tree(tree_clf)
     #classifier(log_clf, title="Logistic Regression")
     #classifier(svm_clf, title="Support Vector Machine")
@@ -211,6 +212,6 @@ if __name__ == "__main__":
     #classifier(ada_clf, title="AdaBoost")
     #classifier(gd_clf, title="Gradient boost")
     #classifier(xg_clf, title="XGBoost")
-    #classifier(voting_all_clf, title="Voting All")
+    classifier(voting_all_clf, title="Voting All")
     #xbg_plot()
     pass
