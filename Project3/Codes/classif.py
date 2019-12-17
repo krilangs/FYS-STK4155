@@ -16,7 +16,7 @@ from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.model_selection import cross_val_score, train_test_split
 
 # Read file into data frame
-infile = open("pulsar_stars.csv", "r")
+infile = open("Data/pulsar_stars.csv", "r")
 pulsar_data = pd.read_csv(infile, header=0,
                           names=("Mean_Int", "STD_Int", "Ex_Kurt_Int", "Skew_Int",
                          "Mean_DMSNR", "STD_DMSNR", "Ex_Kurt_DMSNR", "Skew_DMSNR",
@@ -61,19 +61,18 @@ voting_soft_clf = skle.VotingClassifier(estimators=[("lr", log_clf),
                                         voting="soft", n_jobs=-1)
 
 ada_clf = skle.AdaBoostClassifier(tree_clf, n_estimators=200, algorithm="SAMME.R",
-                                  learning_rate=0.5, random_state=42)
+                                  random_state=42)
 
 gd_clf = skle.GradientBoostingClassifier(loss="exponential", n_estimators=200,
                                          max_depth=9, random_state=42)
 
 xg_clf = xgb.XGBClassifier(objective="multi:softprob", num_class=2, max_depth=5,
-                           n_estimators=250, learning_rate=0.1, n_jobs=-1,
-                           random_state=42, reg_alpha=0, reg_lambda=1)
+                           n_estimators=250,n_jobs=-1, random_state=42)
 
-voting_all_clf = skle.VotingClassifier(estimators=[("tree", tree_clf),
-                                      ("rf", rnd_clf), ("ada", ada_clf),
-                                      ("gd", gd_clf), ("xg", xg_clf)],
-                                      voting="soft", n_jobs=-1)
+voting_best_clf = skle.VotingClassifier(estimators=[("tree", tree_clf),
+                                        ("rf", rnd_clf), ("ada", ada_clf),
+                                        ("gd", gd_clf), ("xg", xg_clf)],
+                                        voting="soft", n_jobs=-1)
 
 def classifier(clf, title):
     """
@@ -94,11 +93,13 @@ def classifier(clf, title):
 
     cks = sklm.cohen_kappa_score(y_test, y_pred)
     cr = sklm.classification_report(y_test, y_pred)
+    cross_val = cross_val_score(clf, X_test, y_test, cv=5)
 
     print("Classification report for " + title + " : \n", cr)
 
-    print("Cross-validation score:")  # Test score
-    print(cross_val_score(clf, X_test, y_test, cv=5))
+    print("Cross-validation score:\n", cross_val)  # Test score
+    print("Highest accuracy score from cross-validation:\n", np.max(cross_val))
+    print("Mean accuracy score from cross-validation:\n", np.mean(cross_val))
 
     score_and_mse = {"Model":[title], "Score":[accuracy],
                      "Cohen Kappa Score":[cks], "MSE":[mse], "Var":[variance],
@@ -135,16 +136,21 @@ def data_info():
     """
     Function for inspecting the data set.
     """
+    # Set font sizes for plotting
+    fonts = {"font.size": 16, "legend.fontsize": "medium",
+             "xtick.labelsize": 15, "ytick.labelsize": 15, "axes.titlesize": 22}
+    plt.rcParams.update(fonts)
+
     pulsar_data.info()
     print(pulsar_data.head())  # Print top 5 entries of the data set
     print("Value|Count")
     print(pulsar_data["Target"].value_counts()) # Count number of targets in data
 
     f, ax = plt.subplots(figsize=(12, 12))
-    sns.heatmap(pulsar_data.corr(), annot=True, linecolor="blue", fmt=".2f",
-                ax=ax, annot_kws={"size": 14})
-    sns.set(font_scale=2.5)
     ax.set_title("Heatmap of the data set features")
+    sns.heatmap(pulsar_data.corr(), annot=True, linecolor="blue", fmt=".2f",
+                ax=ax)
+    #sns.set(font_scale=5)
     plt.tight_layout()
     plt.savefig("Figures/heatmap.png")
 
@@ -194,6 +200,10 @@ def xbg_plot():
     plt.savefig("Figures/xgb_tree.png")
     plt.show()
 
+    fonts = {"font.size": 14,
+         "legend.fontsize": "medium", "xtick.labelsize": 12, "ytick.labelsize": 12,
+         "axes.titlesize": 15}
+    plt.rcParams.update(fonts)
     plt.rcParams["figure.figsize"] = [10, 10]
     xgb.plot_importance(xg_clf)
     plt.savefig("Figures/Importance.png")
@@ -212,6 +222,6 @@ if __name__ == "__main__":
     #classifier(ada_clf, title="AdaBoost")
     #classifier(gd_clf, title="Gradient boost")
     #classifier(xg_clf, title="XGBoost")
-    classifier(voting_all_clf, title="Voting All")
+    #classifier(voting_best_clf, title="Voting Best")
     #xbg_plot()
     pass
