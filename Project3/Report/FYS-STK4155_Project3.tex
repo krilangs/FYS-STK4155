@@ -65,15 +65,15 @@ Pulsar stars are Neutron stars that rotate with such velocity that they emit rad
 
 The data set contains a total of 17 898 number of instances (161 082 data points), where 1 639 are real pulsar examples and 16 259 are spurious examples caused by noise/RFI. So the real pulsar data examples are a minority positive class. All the data have been checked by human annotators. Each candidate is stored in a separate row and contains 8 continuous variables and the class label (0 or 1):
 \begin{enumerate}
-	\item Mean of the integrated profile.
-	\item Standard deviation of the integrated profile.
-	\item Excess kurtosis of the integrated profile.
-	\item Skewness of the integrated profile.
-	\item Mean of the DM-SNR curve.
-	\item Standard deviation of the DM-SNR curve.
-	\item Excess kurtosis of the DM-SNR curve.
-	\item Skewness of the DM-SNR curve.
-	\item Class
+	\item Mean of the integrated profile. Renamed: "Mean\_Int".
+	\item Standard deviation of the integrated profile. Renamed: "STD\_Int".
+	\item Excess kurtosis of the integrated profile. Renamed: "EX\_Kurt\_Int".
+	\item Skewness of the integrated profile. Renamed: "Skew\_Int".
+	\item Mean of the DM-SNR curve. Renamed: "Mean\_DMSNR".
+	\item Standard deviation of the DM-SNR curve. Renamed: "STD\_DMSNR".
+	\item Excess kurtosis of the DM-SNR curve. Renamed: "Ex\_Kurt\_DMSNR".
+	\item Skewness of the DM-SNR curve. Renamed: "Skew\_DMSNR".
+	\item Target\_class. Renamed: "Target".
 \end{enumerate}
 The first four variables are simple statistics from the integrated pulse profile. They describe the longitude-resolved version of the signal that has been averaged in both time and frequency. The next four are obtained from the DM-SNR curve, and contains the same type of information. Their mathematical definitions can be seen in Table 4 in the scientific paper by \citet{pulsar_art}. In this scientific paper (section 5) there are also more thorough explanations about the pulsar data and how they are produced.
 
@@ -132,7 +132,7 @@ r_{pb}=\frac{\overline{x}_1-\overline{x}_2}{\sigma}\cdot\sqrt{\frac{n_2\cdot n_1
 \end{equation}
 where $n$ is the total number of samples, $\overline{x}_i$ is the mean value of a feature group $i$ and $\sigma$ is the sample standard deviation. This is calculated with the \textit{pointbiserialr} function from the Scipy.stats library in Python on the design matrix \textbf{X} and target \textbf{y}. This is calculated for each of the 8 features.
 
-For more information on the correlation in the data set, we can look at the entropy and information gain. The entropy is calculated as
+For more information on the correlation in the data set, we can look at the entropy and information gain. The entropy is calculated as (\cite{pulsar_art})
 \begin{equation*}
 H(x_i)=-\sum_{j\in x_i}P(j)\log_2P(j),
 \end{equation*}
@@ -145,7 +145,7 @@ With these definitions we define the information gain (mutual information) for a
 \label{eq:inf_gain}
 I(x_i:\textbf{y})=H(x_i)-H(x_i|\textbf{y}).
 \end{equation}
-The information gain is a measure of the correlation between a feature and the target which detects non-linearities. This is calculated using the \textit{mutual\_info\_classif} function from the Scikit-Learn library.
+The information gain is a measure of the correlation between a feature and the target which detects non-linearities or the amount of information that one feature provides about another. This is calculated using the \textit{mutual\_info\_classif} function from the Scikit-Learn library.
 
 For classification we measure the performance of the model with the accuracy score which is the number of correct predictions divided by the total number of predictions:
 \begin{equation}
@@ -228,7 +228,7 @@ The programming is done in Python 3.7 in the program \textit{classif.py} found a
 
 \subsection{Analyzing the Data}
 \label{subsect:analysis}
-We start by reading in the downloaded CSV file \textit{pulsar\_stars.csv} of the pulsar candidates in the program. Then we rename the feature variables to be shorter. By using the panda-library, we do an analysis of the data set to make sure that the data file is complete and read in correct. We also check the correlation between the data features by plotting a correlation heatmap using the seaborn-library. Next, we create the design matrix \textbf{X} and target vector \textbf{y} as mentioned in the Data section (\ref{sect:Data}). As in the scientific report \cite{pulsar_art}, we calculate the point-biserial correlation coefficient of the data features with the design matrix and target vector. The design matrix and target vector are then split into training and test data with 27\% test data. Then we scale the design training and test data with respect to the training data. With the training data we calculate the information gain of the features.
+We start by reading in the downloaded CSV file \textit{pulsar\_stars.csv} of the pulsar candidates in the program. Then we rename the feature variables to be shorter (as seen in the Data section \ref{sect:Data}). By using the panda-library, we do an analysis of the data set to make sure that the data file is complete and read in correct. We also check the correlation between the data features by plotting a correlation heatmap using the seaborn-library. Next, we create the design matrix \textbf{X} and target vector \textbf{y} as mentioned in the Data section (\ref{sect:Data}). As in the scientific report \cite{pulsar_art}, we calculate the point-biserial correlation coefficient of the data features with the design matrix and target vector. The design matrix and target vector are then split into training and test data with 27\% test data. Then we scale the design training and test data with respect to the training data. With the training data we calculate the information gain of the features.
 
 \subsection{Classification}
 \label{subsect:classif}
@@ -250,9 +250,65 @@ For each of the classification methods above, we do the same evaluations of the 
 
 \section{Results}
 \label{sect:Results}
+For comparison of our results, we compare with the results in the scientific report by \citet{pulsar_art}.
+
+\subsection{Results of the Data Analysis}
+\label{subsect:Res_analysis}
+In Figure \ref{fig:heatmap} we see a heatmap of the correlations between the features (from -1 to 1) in the pulsar data set. A score of 1 means the features are perfectly correlated, while a score of -1 means a perfect anti-correlation between the features. If the score is 0 then the features are independent on each other. From this map we see a high positive correlation between:
+\begin{itemize}
+	\item Excess kurtosis of the integrated profile \& Skewness of the integrated profile (0.95).
+	\item Excess kurtosis of the DM-SNR curve \& Skewness of the DM-SNR curve (0.92).
+	\item Mean of the DM-SNR curve \& Standard deviation of the DM-SNR curve (0.80).
+\end{itemize}
+This means that these features are highly correlated to each other. The diagonal is the correlation of the feature with it self, which is obviously 1. We also see a high negative correlation between:
+\begin{itemize}
+	\item Mean of the integrated profile \& Excess kurtosis of the integrated profile (-0.87).
+	\item Standard deviation of the DM-SNR curve \& Excess kurtosis of the DM-SNR curve (-0.81).
+	\item Mean of the integrated profile \& Skewness of the integrated profile (-0.74).
+\end{itemize}
+
+\begin{figure}[htbp!]
+	\centering\includegraphics[width=0.8\linewidth]{heatmap.png}
+	\caption{Here we see a heatmap of the correlations between the features in the pulsar data set.\label{fig:heatmap}}
+\end{figure} 
+
+The point-biserial correlation coefficient in equation \ref{eq:point_biserial}, which measures the linear correlation between the features and the class target, for the features can be seen in Table \ref{tab:correlations}. Here we see that especially the mean, excess kurtosis and skewness of the integrated profile give strong correlations ($>|0.5|$) to the class targets. This is the same values as in Table 6 in the scientific article by \citet{pulsar_art} when rounding to the same number of digits, except for the skewness of the DM-SNR curve where we get $\approx-0.259$ while they got $\approx-0.230$. We also see that none of the features are independent on the target class.
+
+After splitting the data set into training and test data and scaling the training data, we calculated the information gain of the features as explained in the Data section \ref{sect:Data}. The information gains of the features can be also be seen in Table \ref{tab:correlations} (the rightmost values). There we see that the features of the integrated profile (except the STD) gives the higher values, which means that these features seems to be the most important. The difference between the integrated profile features and the DM-SNR curve features are not that different, so all the feature have to be considered.
+
+\begin{table}[htbp!]
+	\centering
+	%\hspace{-1cm}
+	\begin{tabular}{ |c|c|c| }
+		\hline \rule{0pt}{13pt}
+		Feature & $r$-correlation & Information gain \\
+		\hline \rule{0pt}{13pt}
+		Mean of the integrated profile & -0.673181 & 0.191635 \\
+		\hline \rule{0pt}{13pt}
+		Standard deviation of the integrated profile & -0.363708 & 0.088278 \\
+		\hline \rule{0pt}{13pt}
+		Excess kurtosis of the integrated profile & 0.791591 & 0.226438 \\
+		\hline \rule{0pt}{13pt}
+		Skewness of the integrated profile & 0.709528 & 0.194512 \\
+		\hline \rule{0pt}{13pt}
+		Mean of the DM-SNR curve & 0.4008761 & 0.114824 \\
+		\hline \rule{0pt}{13pt}
+		Standard deviation of the DM-SNR curve & 0.491535 & 0.119248 \\
+		\hline \rule{0pt}{13pt}
+		Excess kurtosis of the DM-SNR curve & -0.390816 & 0.113393 \\
+		\hline \rule{0pt}{13pt}
+		Skewness of the DM-SNR curve & -0.259117 &0.115064 \\
+		\hline
+	\end{tabular}	
+	\caption{Table for the point-biserial correlation coefficient in equation \ref{eq:point_biserial} for each feature on the pulsar data set. This is a measurement of the linear correlation between the features and the class target. Specially three features give strong correlations ($>|0.5|$) to the class targets; the mean, excess kurtosis and skewness of the integrated profile. To the right we see the information gain of the features. The information gain is a measure of the correlation between a feature and the target which detects non-linearities. Here we see that the features of the integrated profile (mostly) gives the higher information gain, which means these are the most important features. \label{tab:correlations}}
+\end{table}
+
+\subsection{Results of the Classification Analysis}
+\label{subsect:Res_class}
+...
 \section{Conclusion}
 \label{sect:Conclusion}
-
+...
 \appendix
 \section{Appendix}
 \label{sect:Appendix}
