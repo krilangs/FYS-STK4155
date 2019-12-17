@@ -232,17 +232,17 @@ We start by reading in the downloaded CSV file \textit{pulsar\_stars.csv} of the
 
 \subsection{Classification}
 \label{subsect:classif}
-Then we implement all the classification methods we explained in the Theory section (\ref{subsect:class_methods}) into our program using the Scikit-Learn xgboost libraries. This includes (input parameters that are not covered, uses the default parameters):
+Then we implement all the classification methods we explained in the Theory section (\ref{subsect:class_methods}) into our program using the Scikit-Learn and xgboost libraries. All classifiers have random\_state=42, for reproduction of results. The used classifiers include (input parameters that are not covered, uses the default parameters):
 \begin{enumerate}
 	\item Logistic Regression (LR): Where we use the \textit{liblinear}-solver.
-	\item Support Vector Machine (SVM): Where we use probability=True.
-	\item Decision Tree: Where we set the maximum depth of the tree to 6. Here we also plot a decision tree for visualization.
-	\item Bagging: Where we use bagging on the decision tree with bootstrap, 500 number of estimators in the ensemble, 200 number of samples to train on each base estimator and use all processors to run the jobs in parallel.
-	\item Random Forest: With 500 number of estimators.
-	\item Voting classifier: Use both hard and soft voting separately on all of the mentioned classifier methods mentioned above together (1-5) and use all processors to run the jobs in parallel.
-	\item AdaBoost: Use AdaBoost on the decision tree with 200 number of estimators, learning rate of 0.5 and the "SAMME.R" real boosting algorithm.
-	\item Gradient boosting: Where we use the exponential loss function to be optimized and 500 number of estimators.
-	\item XGBoost: Where we use the "multi:softprob" learning objective with 2 classes, gbtree booster, 200 number of estimators, 0.1 learning rate, 10 threads to run in parallel and set maximum depth of the tree to 5. Here we also plot the visualization of the first decision tree, and plot the feature importance in the trees.
+	\item Support Vector Machine (SVM): Where we use probability=True to calculate probability estimates. Set gamma="auto", which is a kernel coefficient as 1/n\_features.
+	\item Decision Tree: Where we set the maximum depth of the tree to 6, since this give the best results. Here we also plot a decision tree for visualization only.
+	\item Bagging: Where we use bagging on the decision tree with bootstrap, 500 estimators in the ensemble, maximum 200 samples to train on each base estimator and use all processors to run the jobs in parallel (for speed).
+	\item Random Forest: With 500 estimators.
+	\item Voting classifier: Use both hard and soft voting separately on all of the mentioned classifier methods mentioned above together (1-5), and use all processors to run the jobs in parallel.
+	\item AdaBoost: Use AdaBoost on the decision tree with 200 estimators and the "SAMME.R" real boosting algorithm \citep{SAMMER}.
+	\item Gradient boosting: Where we use the exponential loss function to be optimized, 200 estimators and a maximum depth of 9 for the number of nodes in the tree.
+	\item XGBoost: Where we use the "multi:softprob" learning objective with 2 classes (since binary problem), which does a multiclass classification and outputs a vector containing predicted probabilities of each data point to each class. We also use 250 estimators and set maximum depth of the tree to 5. Here we also plot the visualization of the first decision tree in this algorithm, and plot the feature importance of the trees.
 	\item Voting classifier: Where we use the soft voting classifier on the classification methods yielding the highest accuracy score. This include decision tree, random forest, AdaBoost, Gradient boost and XGBoost.
 \end{enumerate}
 
@@ -306,6 +306,40 @@ After splitting the data set into training and test data and scaling the trainin
 \subsection{Results of the Classification Analysis}
 \label{subsect:Res_class}
 ...
+\begin{table}[htbp!]
+	%\centering
+	\hspace{-1.5cm}
+	\begin{tabular}{ |c|c|c|c|c|c|c|c| }
+		\hline \rule{0pt}{13pt}
+		Model & Accuracy & $\kappa$-score & Max CV score & Mean CV score & MSE & Variance & Bias \\
+		\hline \rule{0pt}{13pt}
+		LR & 0.977654 & 0.856473 & 0.984504 & 0.977030 & 0.022346 & \textbf{0.072618} & 0.083076 \\
+		\hline \rule{0pt}{13pt}
+		SVM & 0.978481 & 0.862088 & \textbf{0.986570} & 0.978892 & 0.021519 & 0.072967 & 0.083066 \\
+		\hline \rule{0pt}{13pt}
+		Decision Tree & 0.979723 & 0.874138 & 0.981386 & 0.977859 & 0.020277 & 0.078152 & \textbf{0.082955} \\
+		\hline \rule{0pt}{13pt}
+		Bagging & 0.977033 & 0.853283 & 0.985537 & 0.977857 & 0.022967 & 0.073489 & 0.083051 \\
+		\hline \rule{0pt}{13pt}
+		Random Forest & 0.979930 & 0.873158 & 0.983471 & 0.978272 & 0.020070 & 0.075223 & 0.083008 \\
+		\hline \rule{0pt}{13pt}
+		Voting (Hard) & 0.978481 & 0.862979 & 0.985537 & 0.979305 & 0.021519 & 0.074010 & 0.083037 \\
+		\hline \rule{0pt}{13pt}
+		Voting (Soft) & 0.979516 & 0.869426 & 0.985537 & 0.979513 & 0.020484 & 0.073836 & 0.083042 \\
+		\hline \rule{0pt}{13pt}
+		AdaBoost & 0.980550 & 0.878510 & 0.98240 & 0.979308 & 0.019450 & 0.077121 & 0.082971 \\
+		\hline \rule{0pt}{13pt}
+		Gradient Boost & \textbf{0.981378} & \textbf{0.883433} & 0.985537 & 0.979720 & \textbf{0.018622} & 0.076777 & 0.082977 \\
+		\hline \rule{0pt}{13pt}
+		XGBoost & 0.980757 & 0.878907 & 0.983471 & 0.979721 & 0.019243 & 0.075914 & 0.082994 \\
+		\hline \rule{0pt}{13pt}
+		Voting (Best) & 0.980964 & 0.879825 & 0.984504 & \textbf{0.980134} & 0.019036 & 0.075396 & 0.083004 \\
+		\hline
+	\end{tabular}	
+	\caption{Table for the evaluation values for all the used classifiers on the pulsar data set. From left to right: The accuracy score, the Cohen Kappa score, highest cross-validation score for 5 folds, the mean cross-validation score, MSE, variance and bias. The values in bold font are the best values for that evaluation value. Here we see Gradient boost has the best accuracy, Cohen Kappa score and MSE. The other eval values are not as important as these, and the differences for the other best compared to gradient boost are not that different. From this analysis we can conclude that the gradient boost is the best classifier for our pulsar data set case. \label{tab:classifiers}}
+\end{table}
+
+
 \section{Conclusion}
 \label{sect:Conclusion}
 ...
