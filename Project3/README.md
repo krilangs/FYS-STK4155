@@ -6,6 +6,6 @@ Code - Contains `classif.py` which does all the coding. The program is done in P
 
 Data - Contains the downloaded HTRU2 pulsar data set `pulsar_stars.csv`, a .txt file containing the classification reports and .dot files used to produce images of decision trees for various scenarios.
 
-Figures - Contains all the figures produced by `classif.py`. These include confusion matrices, cumulative gains and ROC curves for all the classification models, images of "trees" (the bottom 4), feature importance plot and correlation heatmap.
+Figures - Contains all the figures produced by `classif.py`. These include confusion matrices, cumulative gains and ROC curves for all the classification models, images of "trees" (the bottom 5), feature importance plot and correlation heatmap.
 
 Report - Contains the report as .tex and .pdf, and a bibtex file with references.
