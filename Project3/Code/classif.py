@@ -67,7 +67,7 @@ gd_clf = skle.GradientBoostingClassifier(loss="exponential", n_estimators=200,
                                          max_depth=9, random_state=42)
 
 xg_clf = xgb.XGBClassifier(objective="multi:softprob", num_class=2, max_depth=5,
-                           n_estimators=250,n_jobs=-1, random_state=42)
+                           n_estimators=250, n_jobs=-1, random_state=42)
 
 voting_best_clf = skle.VotingClassifier(estimators=[("tree", tree_clf),
                                         ("rf", rnd_clf), ("ada", ada_clf),
@@ -79,9 +79,8 @@ def classifier(clf, title):
     Function for doing the analysis of the data set with the chosen classifier.
     """
     # Set font sizes for plotting
-    fonts = {"font.size": 14,
-         "legend.fontsize": "medium", "xtick.labelsize": 12, "ytick.labelsize": 12,
-         "axes.titlesize": 15}
+    fonts = {"font.size": 14, "legend.fontsize": "medium",
+             "xtick.labelsize": 12, "ytick.labelsize": 12, "axes.titlesize": 15}
     plt.rcParams.update(fonts)
 
     clf.fit(X_train, y_train)
@@ -114,7 +113,7 @@ def classifier(clf, title):
     if clf == voting_hard_clf:
         fpr, tpr, thresholds = sklm.roc_curve(y_test, y_pred)
         plt.figure()
-        plt.plot([0,1], [0,1], "k--", color="grey")
+        plt.plot([0, 1], [0, 1], "k--", color="grey")
         plt.plot(fpr, tpr, "r")
         plt.title("ROC curve: " + title)
         plt.xlabel("False Positive Rate")
@@ -170,7 +169,7 @@ def data_info():
     # Point-biserial correlation, linear correlation between the variables for
     # dichotomous target variable
     for i in range(8):
-        print(pointbiserialr(np.ravel(y), X[:,i]))
+        print(pointbiserialr(np.ravel(y), X[:, i]))
 
     plt.show()
 
@@ -200,9 +199,8 @@ def xbg_plot():
     plt.savefig("Figures/xgb_tree.png")
     plt.show()
 
-    fonts = {"font.size": 14,
-         "legend.fontsize": "medium", "xtick.labelsize": 12, "ytick.labelsize": 12,
-         "axes.titlesize": 15}
+    fonts = {"font.size": 18, "legend.fontsize": "medium",
+             "xtick.labelsize": 16, "ytick.labelsize": 16, "axes.titlesize": 18}
     plt.rcParams.update(fonts)
     plt.rcParams["figure.figsize"] = [10, 10]
     xgb.plot_importance(xg_clf)
