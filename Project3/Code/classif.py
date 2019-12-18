@@ -210,7 +210,7 @@ def xbg_plot():
     plt.show()
 
 if __name__ == "__main__":
-    #data_info()
+    data_info()
     #create_tree(tree_clf)
     #classifier(log_clf, title="Logistic Regression")
     #classifier(svm_clf, title="Support Vector Machine")
