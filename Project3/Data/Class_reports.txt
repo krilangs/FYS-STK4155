@@ -1,0 +1,109 @@
+Classification report for Logistic Regression :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.94      0.81      0.87       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.90      0.93      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Support Vector Machine :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.94      0.82      0.87       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.91      0.93      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Decision Tree :
+               precision    recall  f1-score   support
+
+           0       0.99      0.99      0.99      4392
+           1       0.92      0.86      0.89       441
+
+    accuracy                           0.98      4833
+   macro avg       0.95      0.92      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Bagging :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.93      0.81      0.87       441
+
+    accuracy                           0.98      4833
+   macro avg       0.95      0.90      0.93      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Random Forest :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.93      0.84      0.88       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.92      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Hard Voting Class :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.93      0.82      0.87       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.91      0.93      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Soft Voting Class :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.94      0.83      0.88       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.91      0.93      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for AdaBoost :
+               precision    recall  f1-score   support
+
+           0       0.99      0.99      0.99      4392
+           1       0.93      0.85      0.89       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.92      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Gradient boost :
+               precision    recall  f1-score   support
+
+           0       0.99      0.99      0.99      4392
+           1       0.93      0.86      0.89       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.93      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for XGBoost :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.94      0.85      0.89       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.92      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
+-----------------------------------------------------------
+Classification report for Voting Best :
+               precision    recall  f1-score   support
+
+           0       0.98      0.99      0.99      4392
+           1       0.94      0.85      0.89       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.92      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
