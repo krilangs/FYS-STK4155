@@ -18,7 +18,7 @@
 \usepackage{textcomp}
 \definecolor{listinggray}{gray}{0.9}
 \definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
-\lstset{backgroundcolor=\color{lbcolor},tabsize=4,rulecolor=,language=python,basicstyle=\scriptsize,upquote=true,aboveskip={1.5\baselineskip},columns=fixed,numbers=left,showstringspaces=false,extendedchars=true,breaklines=true,
+\lstset{backgroundcolor=\color{lbcolor},tabsize=4,rulecolor=,basicstyle=\scriptsize,upquote=true,aboveskip={1.5\baselineskip},columns=fixed,numbers=none,showstringspaces=false,extendedchars=true,breaklines=true,
 prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,showtabs=false,showspaces=false,showstringspaces=false,identifierstyle=\ttfamily,keywordstyle=\color[rgb]{0,0,1},commentstyle=\color[rgb]{0.133,0.545,0.133},stringstyle=\color[rgb]{0.627,0.126,0.941},literate={å}{{\r a}}1 {Å}{{\r A}}1 {ø}{{\o}}1}
 
 % Use for references
@@ -46,8 +46,9 @@ prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},frame=single,show
 \begin{document}%\layout
 \maketitle
 \begin{abstract}
-	...
+In this project we use various classification and evaluation methods to analyze the HRTU2 data set containing pulsar candidates. First we will do an analysis of the data set where we make sure that the data set is complete and check correlations. The data set contains 8 continuous features and a binary target class for observing either a non-pulsar or a pulsar. The data set consists of 17 898 instances giving 161 082 data points in total. To analyze this data set we will use various classification models like logistic regression, decision tree, random forest, bagging and boosting to mention some. These models are fitted to the processed data after training and scaling. The we will use various evaluation methods to evaluate errors and scores to see how well the models predict the class targets. The aim is to find the classification model that predicts the pulsar data the best. The results we get are also compared to similar results from a scientific article by \citet{pulsar_art} on the same pulsar data set. From theory we would expect the XGBoost classifier to give the best result, since this is one of the most hyped classification algorithms today. From our results we find that the gradient boost classifier give the best overall scores compared to the others with accuracy score of 0.981378. The scores we get for all the classification models are very similar (all higher than 0.977), but the gradient boost gives the highest scores and lowest mean squared error 0.018622. The best classification algorithm in the scientific report, the Gaussian Hellinger Very Fast Decision Tree (GH-VFDT), got an accuracy score of 0.978. This is around the rest of the classification models we have used, but lower than our best.
 \end{abstract}
+
 \section{Introduction}
 \label{sect:Introduction}
 Machine learning is a more and more used method for classification problems. One application of machine learning is to create filters that decreases the human dependency for classification. Normally a human is needed to go through data and decide what the classification of an object is. With machine learning the goal is to make this as automated as possible by using suited algorithms and methods. We will look at several methods for classification in this project.
@@ -224,7 +225,7 @@ For the XGBoost we can look at the feature importance when building the trees. T
 
 \section{Methods}
 \label{sect:Methods}
-The programming is done in Python 3.7 in the program \textit{classif.py} found at the GitHub repository (\ref{sect:Appendix}), among with the pulsar data file and produced figures.
+The programming is done in Python 3.7 in the program \textit{classif.py} found at the GitHub repository (\ref{sect:Appendix}), among with various data files and produced figures.
 
 \subsection{Analyzing the Data}
 \label{subsect:analysis}
@@ -246,7 +247,7 @@ Then we implement all the classification methods we explained in the Theory sect
 	\item Voting classifier: Where we use the soft voting classifier on the classification methods yielding the highest accuracy score. This include decision tree, random forest, AdaBoost, Gradient boost and XGBoost.
 \end{enumerate}
 
-For each of the classification methods above, we do the same evaluations of the pulsar data set. The various evaluations are explained in the theory section (\ref{subsect:eval_methods}). We fit the classification methods to the training data. Then we use the test data to make a prediction of the class labels. With this prediction we calculate the MSE, variance, bias, accuracy score and the Cohen Kappa score. We also make a classification report containing various averages for the classification methods. Then we plot the confusion matrix of the predicted results of the pulsars. With the test data we calculate the cross-validation score with 5 folds. Then we plot the ROC curve for the classification methods for the sensitivity as function of the specificity. For the hard voting classification we use the prediction, while for the others we use the probability estimation of the test data to make the ROC curve plot. Lastly we use the probability estimate to plot the cumulative gain for the class targets as functions of the percentage of the samples.
+For each of the classification methods above, we do the same evaluations of the pulsar data set. The various evaluations to be done are explained in the theory section (\ref{subsect:eval_methods}). After the analysis of the data set, we fit the classification methods to the training data. Then we use the test data to make a prediction of the class labels. With this prediction we calculate the MSE, variance, bias, accuracy score and the Cohen Kappa score. With the test data we also calculate the cross-validation score with 5 folds, where we look at the highest of the 5 and the mean of the 5 scores. We also make a classification report containing various averages for the classification methods. Then we plot the confusion matrix of the predicted results of the pulsars. Then we plot the ROC curve for the classification methods for the sensitivity as function of the specificity. For the hard voting classification we use the prediction, while for the others we use the probability estimation of the test data to make the ROC curve plot. Lastly we use the probability estimate to plot the cumulative gain for the class targets as functions of the percentage of the samples.
 
 \section{Results}
 \label{sect:Results}
@@ -305,7 +306,10 @@ After splitting the data set into training and test data and scaling the trainin
 
 \subsection{Results of the Classification Analysis}
 \label{subsect:Res_class}
-...
+After having done all the evaluation methods (sect. \ref{subsect:eval_methods}) for all the mentioned classification models (sect. \ref{subsect:class_methods}), we got the printed results in Table \ref{tab:classifiers}. In that table we see the values for each of the classification models used for the accuracy score, Cohen Kappa score, highest cross-validation score out of the 5 from the 5 folds used, the mean cross-validation score of those 5, the MSE, variance and bias. The values with bold font are the best values in for that evaluation method. We see that the gradient method gives the best accuracy and Cohen Kappa score and lowest MSE. These are the more important values for finding the best classification model on the pulsar data. Also the difference in the best values and the corresponding values for the gradient are not that different. All the classification models are very similar in accuracy and error estimate, but from these evaluation methods we can conclude that the gradient boosting classification model seems to be best on the pulsar data we are looking at. 
+
+In the scientific report by \citet{pulsar_art} they test a few classification algorithms. The best results they get are with the so-called Gaussian Hellinger Very Fast Decision Tree (GH-VFDT). This classification algorithm is explained in the article and can be explained in short as a tree-based algorithm for making the classifier more robust to imbalanced learning problems, like here where the majority of the targets are non-pulsars. This methods only requires mean and standard deviations of the each feature, which minimizes the runtime and memory used. The accuracy score they got with the GH-VFDT algorithm was 0.978, which is slightly worse than what we got for our best gradient boosting classifier. So our classifier seems to be better than in the article, but we have to take into consideration that the data are sampled and split differently which could make a difference in the results. 
+
 \begin{table}[htbp!]
 	%\centering
 	\hspace{-1.5cm}
@@ -339,10 +343,61 @@ After splitting the data set into training and test data and scaling the trainin
 	\caption{Table for the evaluation values for all the used classifiers on the pulsar data set. From left to right: The accuracy score, the Cohen Kappa score, highest cross-validation score for 5 folds, the mean cross-validation score, MSE, variance and bias. The values in bold font are the best values for that evaluation value. Here we see Gradient boost has the best accuracy, Cohen Kappa score and MSE. The other eval values are not as important as these, and the differences for the other best compared to gradient boost are not that different. From this analysis we can conclude that the gradient boost is the best classifier for our pulsar data set case. \label{tab:classifiers}}
 \end{table}
 
+Below we see how the classification report is for the gradient boost classification. We choose to show this one since the gradient boost seems to give the best scores, as we have already seen. For the classification reports for the rest of the classification methods used, see \textit{Class\_reports.txt} in the Data folder at the GitHub repository \ref{sect:Appendix}. From these reports we can see that the classification models are better at predicting the negative outcome (non-pulsar) than at predicting the positive outcome (pulsar). This is sensible since we have a lot more negative outcomes (in total 16 259) in the data target class than we have positive outcomes (in total 1 639). So it makes sense that the negative predictions are better since the classification models have much more negative outcomes to train on.
+\begin{lstlisting}
+Classification report for Gradient boost :
+              precision    recall  f1-score   support
 
+           0       0.99      0.99      0.99      4392
+           1       0.93      0.86      0.89       441
+
+    accuracy                           0.98      4833
+   macro avg       0.96      0.93      0.94      4833
+weighted avg       0.98      0.98      0.98      4833
+\end{lstlisting}
+
+In Figure \ref{fig:tree} we see how the XGBoost algorithm makes its trees by choosing the most important features as root and internal nodes leading to the leafs. This figure shows a part of the first tree the classifier makes. In Figure \ref{fig:importance} we see graph bars over the importance features for the XGBoost trees. This figure shows how many times the features appear in the trees. In descending order, we see that the most important features are the excess kurtosis, standard deviation and mean of the integrated profile and standard deviation of the DM-SNR curve when the XGBoost is building the trees. 
+
+In the Figures folder at the GitHub repository \ref{sect:Appendix} we can also see other images of trees made by the decision tree classifier. With these images we see how the trees are made when using different parameters. \textit{tree\_ent.png} shows how the tree is made with 6 as the maximum depth of the tree and with entropy and information gain to determine the most important features, while the rest uses the Gini index for best results in our case. \textit{tree\_not\_train.png} shows how the tree would be made if we did not split the data set into training and test data. \textit{tree\_big.png} shows the full tree when not setting a maximum depth of the tree, which we see can make a very large tree. \textit{tree\_.png} shows the tree made when we use the optimal parameters for the decision tree classifier. A description of how the trees are made is also well explained in Figure 8 in the scientific report by \citet{pulsar_art}.
+
+In Figure \ref{fig:confusion} we see the normalized confusion matrix when using the gradient boost classifier, which gave the best confusion matrix. The sum of the rows equal to 1, and we wanted the optimal confusion matrix with 1 on the diagonal. This scenario says that the classifier predicts the class targets perfectly. This is not the case here. The prediction of a non-pulsar when the observation is a non-pulsar is 0.99, which is very good. The prediction of a pulsar when the observation is a pulsar on the other hand is 0.86, which is not as good. This means that the classifier struggles more to predict a pulsar when the observation is a pulsar. This could come from that the data set contains much more non-pulsar observations than pulsars, as mentioned earlier. The confusion matrices for the other classification methods can be seen in the Figures folder at the GitHub repository \ref{sect:Appendix}.
+
+From the confusion matrix results where we calculated the true positive rate (sensitivity) and the false positive rate (specificity), we plotted the sensitivity as function of the specificity. These predicted curves are in the case when there is observed a pulsar. This is the ROC curve in Figure \ref{fig:ROC} with the gradient boost method. The important curves all go quickly close to 1, where we want the curves to be as close as possible to the top left corner. The rest of the ROC curves plots can be seen in the Figures folder at the GitHub repository \ref{sect:Appendix}.
+
+In Figure \ref{fig:cumulative_gain} we see the cumulative gain for the gradient boost classifier as function of the percentage of the test data used for the predicted class targets 0 and 1. From the figure we see that the gradient boost is better at predicting the class 1 targets than class 0, since the curve for the class 1 is closer to 1 on the y-axis (further away from the baseline which resembles a random classifier) than the class 0 curve. These results we have already seen in this section in Figure \ref{fig:confusion} for the confusion matrix for the prediction when we have observed a pulsar. The cumulative gains curves for the other classification models can be seen in the Figures folder at the GitHub repository \ref{sect:Appendix}.
+
+\begin{figure}[htbp!]
+	\centering\includegraphics[width=1.0\linewidth, height=0.5\linewidth]{xgb_tree_test.png}
+	\caption{Here we see a part of the first tree just to see how the XGBoost creates the trees (and also other tree-methods). This is just a visualization to show how the trees are made by choosing the most important features as root and internal nodes leading to the leafs. Full image \textit{xgb\_tree.png} can be seen in the Figures folder at the GitHub repository \ref{sect:Appendix}. \label{fig:tree}}
+\end{figure} 
+
+\begin{figure}[htbp!]
+	\centering\includegraphics[width=0.5\linewidth]{Importance.png}
+	\caption{Here we see a plot with bar graphs of the feature importance when building the XGBoost trees. This shows how many times a feature is split across the boosting trees for this model. They are ordered after how many times they appear in the trees. The features are labeled from f0-f7 which represent the data features in the Data section \ref{sect:Data} (from 1-8) respectively. \label{fig:importance}}
+\end{figure}
+
+\begin{figure}[htbp!]
+	\centering\includegraphics[width=0.5\linewidth]{Confusion_Gradient_boost.png}
+	\caption{This figure show the normalized confusion matrix made with the gradient boost classifier. This is the classifier that gave the best accuracy score and confusion matrix. See that the classifier is much better at predicting the true negative (TN: 0,0) than the true positive (TP: 1,1). This means that the classifier is better at predicting a non-pulsar which by observation is a non-pulsar, than it is at predicting a pulsar which is observed as a real pulsar.  \label{fig:confusion}}
+\end{figure}
+
+\begin{figure}[htbp!]
+	\centering\includegraphics[width=0.6\linewidth]{ROC_Gradient_boost.png}
+	\caption{Plot of the Receiver Operating Characteristic (ROC) curve with the gradient boost classifier for plotting the true positive rate (sensitivity) as function of the false positive rate (specificity) for target classes 0 and 1. Here we see that the curves early reach 1, which means good accuracy of the test data. \label{fig:ROC}}
+\end{figure}
+
+\begin{figure}[htbp!]
+	\centering\includegraphics[width=0.6\linewidth]{Gain_Gradient_boost.png}
+	\caption{Plot for the cumulative gain for gradient boost classifier as function of the percentage of the data used. We want the curves to go to 1 as early as possible for best results. Here we see that the model does worse when predicting the class 0 than class 1 when we have observed a pulsar, which we already have seen from our results of the confusion matrix. \label{fig:cumulative_gain}}
+\end{figure}
+
+\newpage
 \section{Conclusion}
 \label{sect:Conclusion}
-...
+In this project we have analyzed the HTRU2 data set containing pulsar candidates by using various classification to see how well they predict the binary target classes. To do this we have used various evaluation methods for evaluating errors and scores. For the classification methods we have tested different input parameters to optimize each classifier. After all the analysis we found that gradient boost classifier gave the best overall scores and errors with accuracy score of 0.981378. The other classifiers all had similar results as the gradient boost, but this gave slightly better overall results. From our plots we also found that the classifiers are better at predicting the observed non-pulsars correct (0.99), than predicting the observed pulsars (0.81-0.86). We also compared our results to results in the scientific article by \citet{pulsar_art}, which found the best accuracy score of 0.978 with the GH-VFDT classification algorithm on the same data set.
+
+For future work we could try to optimize the classifiers even more by testing the input parameters more. We could also try to change how we sample and train/split the data set for different results. We could also try to implement other classification methods like Neural Networks, the GH-VFDT algorithm from the scientific article or even try to combine methods for improved results. Another thing that could be done is to change and use these methods to build automatic filters to classify pulsars, which earlier had to be classified manually by humans.
+
 \appendix
 \section{Appendix}
 \label{sect:Appendix}
